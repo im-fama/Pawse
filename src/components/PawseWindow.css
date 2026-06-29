@@ -1,0 +1,101 @@
+.pawse-window {
+  width: 100%;
+  height: 100%;
+  background: #634636;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  border-color: #33241C;
+  border-width: 10px;
+}
+
+.pawse-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+}
+
+.pawse-titlebar-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--pawse-font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--pawse-text-on-dark);
+}
+
+.pawse-titlebar-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.pawse-titlebar-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.pawse-titlebar-control-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--pawse-frame-dark);
+  border: 1.5px solid rgba(245, 236, 220, 0.15);
+  color: var(--pawse-text-on-dark);
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  line-height: 1;
+}
+
+.pawse-titlebar-control-btn:hover {
+  background: var(--pawse-pill-hover);
+  border-color: rgba(245, 236, 220, 0.4);
+}
+
+.pawse-titlebar-control-btn:active {
+  transform: translateY(0.5px);
+}
+
+.pawse-titlebar-btn {
+  background: var(--pawse-frame-dark);
+  border: 1.5px solid rgba(245, 236, 220, 0.15);
+  color: var(--pawse-text-on-dark);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: var(--pawse-font-body);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pawse-titlebar-btn:hover {
+  background: var(--pawse-pill-hover);
+  border-color: rgba(245, 236, 220, 0.4);
+}
+
+.pawse-content {
+  background: var(--pawse-card);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.pawse-footer {
+  padding: 10px 12px 4px;
+}

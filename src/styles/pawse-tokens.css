@@ -1,0 +1,23 @@
+/* Pawse design tokens, matching the Figma reference exactly:
+   warm espresso window chrome, cream content areas, pill-shaped
+   dark-brown buttons with cream text. */
+
+:root {
+  --pawse-frame: #5a4030;
+  --pawse-frame-dark: #3e2c20;
+  --pawse-card: #d9bda0;
+  --pawse-panel: #ede0cc;
+  --pawse-panel-light: #f5ecdc;
+  --pawse-text: #4a3324;
+  --pawse-text-muted: #8a6f56;
+  --pawse-text-on-dark: #f5ecdc;
+  --pawse-accent: #e8927a;
+  --pawse-accent-soft: #f3c9c0;
+  --pawse-pill: #5a4030;
+  --pawse-pill-hover: #6b4d3a;
+  --pawse-border: #b89878;
+  --pawse-white: #ffffff;
+
+  --pawse-font-display: "Pixelify Sans", monospace;
+  --pawse-font-body: "Pixelify Sans", monospace;
+}

@@ -1,0 +1,132 @@
+.carousel-days-label {
+  text-align: center;
+  font-family: var(--pawse-font-body);
+  font-size: 12px;
+  color: var(--pawse-text-on-dark);
+  margin: -4px 0 6px;
+  font-weight: 500;
+}
+
+.carousel-inner-panel {
+  background: var(--pawse-panel);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.carousel-question {
+  text-align: center;
+  font-family: var(--pawse-font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--pawse-text);
+  margin: 0 0 2px;
+}
+
+.carousel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.carousel-arrow {
+  background: none;
+  border: none;
+  font-size: 36px;
+  line-height: 1;
+  color: var(--pawse-text-muted);
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+  font-family: monospace;
+}
+
+.carousel-arrow:hover {
+  background: rgba(90, 64, 48, 0.08);
+  color: var(--pawse-text);
+}
+
+.carousel-arrow:active {
+  transform: scale(0.95);
+}
+
+.carousel-pet-container {
+  width: 105px;
+  height: 105px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-pet-image {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+}
+
+.carousel-select-btn {
+  background: var(--pawse-pill);
+  color: var(--pawse-text-on-dark);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 20px;
+  font-family: var(--pawse-font-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.carousel-select-btn:hover:not(:disabled) {
+  background: var(--pawse-pill-hover);
+}
+
+.carousel-select-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.carousel-select-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.carousel-mood-description-box {
+  background: var(--pawse-pill);
+  border-radius: 4px;
+  padding: 8px 14px;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  height: 80px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-mood-description-text {
+  margin: 0;
+  color: var(--pawse-text-on-dark);
+  font-family: var(--pawse-font-body);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.carousel-error {
+  text-align: center;
+  font-size: 12px;
+  color: #b3503f;
+  margin: 8px 0 0;
+  font-weight: 600;
+}

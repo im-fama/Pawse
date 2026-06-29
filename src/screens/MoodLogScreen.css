@@ -1,0 +1,272 @@
+.moodlog-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.moodlog-title-text {
+  font-family: var(--pawse-font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pawse-text);
+  text-transform: lowercase;
+}
+
+.moodlog-toggle-container {
+  display: flex;
+  background: var(--pawse-panel);
+  border-radius: 4px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.moodlog-toggle-btn {
+  background: none;
+  border: none;
+  padding: 4px 10px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-family: var(--pawse-font-body);
+  color: var(--pawse-text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.moodlog-toggle-btn.active {
+  background: var(--pawse-card);
+  color: var(--pawse-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.moodlog-loading {
+  text-align: center;
+  font-family: var(--pawse-font-body);
+  font-size: 12px;
+  color: var(--pawse-text-muted);
+  padding: 40px 0;
+}
+
+.moodlog-view-container {
+  height: 230px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Custom Scrollbar for layout scroll */
+.moodlog-view-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.moodlog-view-container::-webkit-scrollbar-track {
+  background: rgba(90, 64, 48, 0.05);
+  border-radius: 10px;
+}
+
+.moodlog-view-container::-webkit-scrollbar-thumb {
+  background: rgba(90, 64, 48, 0.2);
+  border-radius: 10px;
+}
+
+.moodlog-view-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(90, 64, 48, 0.35);
+}
+
+.moodlog-weekly-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.moodlog-weekly-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--pawse-panel-light);
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.moodlog-weekly-row.today {
+  border-color: var(--pawse-accent);
+  background: var(--pawse-panel-light);
+}
+
+.moodlog-weekly-date {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.moodlog-weekly-date .weekday {
+  font-family: var(--pawse-font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pawse-text);
+  line-height: 1.1;
+}
+
+.moodlog-weekly-date .date-num {
+  font-family: var(--pawse-font-body);
+  font-size: 10px;
+  color: var(--pawse-text-muted);
+}
+
+.moodlog-weekly-status {
+  display: flex;
+  align-items: center;
+}
+
+.moodlog-weekly-logged {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.moodlog-weekly-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.moodlog-weekly-label {
+  font-family: var(--pawse-font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--pawse-text);
+}
+
+.moodlog-weekly-empty {
+  font-family: var(--pawse-font-body);
+  font-size: 10px;
+  color: var(--pawse-text-muted);
+  opacity: 0.65;
+  font-style: italic;
+}
+
+/* Monthly Calendar */
+.calendar-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  background: var(--pawse-panel);
+  border-radius: 10px;
+  padding: 4px 8px;
+}
+
+.calendar-nav-arrow {
+  background: none;
+  border: none;
+  color: var(--pawse-text);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 8px;
+  font-size: 13px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+  font-family: monospace;
+}
+
+.calendar-nav-arrow:hover {
+  background: rgba(90, 64, 48, 0.08);
+}
+
+.calendar-month-title {
+  font-family: var(--pawse-font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--pawse-text);
+}
+
+.calendar-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.grid-header-cell {
+  font-family: var(--pawse-font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pawse-text-muted);
+}
+
+.calendar-grid-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  background: var(--pawse-panel-light);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px;
+  position: relative;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.calendar-cell.empty {
+  background: none;
+}
+
+.calendar-cell.today {
+  outline: 1.5px solid var(--pawse-accent);
+}
+
+.calendar-cell .cell-num {
+  font-family: var(--pawse-font-body);
+  font-size: 8.5px;
+  color: var(--pawse-text-muted);
+  align-self: flex-start;
+  line-height: 1;
+}
+
+.calendar-cell.logged .cell-num {
+  color: var(--pawse-text);
+  font-weight: 600;
+}
+
+.cell-mood-avatar {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -2px;
+}
+
+.cell-mood-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.moodlog-back-btn {
+  width: 100%;
+  background: var(--pawse-pill);
+  color: var(--pawse-text-on-dark);
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  font-family: var(--pawse-font-display);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.moodlog-back-btn:hover {
+  background: var(--pawse-pill-hover);
+}
