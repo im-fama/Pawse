@@ -1,0 +1,158 @@
+.pawse-window {
+  width: 100%;
+  height: 100%;
+  background: #634636;
+  border: 4px solid #33241C;
+  border-radius: 0;
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.pawse-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  -webkit-app-region: drag;
+}
+
+.pawse-titlebar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 700;
+  font-size: 15px;
+  color: #F0DECA;
+  background: #33241C;
+  border: 2px solid #33241C;
+  border-radius: 6px;
+  padding: 6px 12px;
+  -webkit-app-region: no-drag;
+}
+
+.pawse-titlebar-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.pawse-titlebar-controls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.pawse-titlebar-control-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: #33241C;
+  border: 2px solid #33241C;
+  color: #F0DECA;
+  font-size: 18px;
+  font-family: inherit;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: filter 0.15s ease;
+  line-height: 1;
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 2;
+}
+
+.pawse-titlebar-control-btn:hover {
+  filter: brightness(1.15);
+}
+
+.pawse-titlebar-control-btn:active {
+  transform: translateY(0.5px);
+}
+
+/* emoji buttons need a slightly smaller font so they fit nicely */
+.pawse-titlebar-control-btn.home-btn,
+.pawse-titlebar-control-btn.signout-btn {
+  font-size: 15px;
+}
+
+.pawse-titlebar-control-btn.signout-btn:hover {
+  filter: brightness(1.3);
+}
+
+.pawse-titlebar-btn {
+  background: #33241C;
+  border: 2px solid #33241C;
+  color: #F0DECA;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: filter 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.pawse-titlebar-btn:hover {
+  filter: brightness(1.15);
+}
+
+.pawse-back-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: #F0DECA;
+  font-size: 22px;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 4px 6px;
+  margin-top: -4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: filter 0.15s ease;
+}
+
+.pawse-back-btn:hover {
+  filter: brightness(1.2);
+}
+
+.pawse-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pawse-inner-card {
+  background: #E4C6AC;
+  border: 3px solid #A9836C;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.pawse-footer {
+  flex-shrink: 0;
+  padding-top: 4px;
+}
