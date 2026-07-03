@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PawseWindow from "../components/PawseWindow";
 import { useAuth } from "../lib/useAuth";
 import "./AuthScreen.css";
 
 export default function AuthScreen() {
+  const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
@@ -45,6 +47,7 @@ export default function AuthScreen() {
     try {
       if (mode === "login") {
         await signIn(email.trim(), password);
+        navigate("/home", { replace: true });
       } else {
         const result = await signUp(email.trim(), password);
         if (!result?.session) {

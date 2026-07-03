@@ -97,8 +97,9 @@ export default function MoodLogScreen({ userId }) {
   const [view, setView] = useState("weekly"); // "weekly" | "monthly"
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDay, setHoveredDay] = useState(null);
-  // { date: Date, mood: moodObject } | null
+  // { date: Date, entry: moodEntry } | null
   const [popup, setPopup] = useState(null);
+  const [notePopup, setNotePopup] = useState(null);
   const scrollContainerRef = useRef(null);
   const currentWeekRef = useRef(null);
 
@@ -121,11 +122,16 @@ export default function MoodLogScreen({ userId }) {
 
   // Close popup on Escape
   useEffect(() => {
-    if (!popup) return;
-    const onKey = (e) => { if (e.key === "Escape") setPopup(null); };
+    if (!popup && !notePopup) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setPopup(null);
+        setNotePopup(null);
+      }
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [popup]);
+  }, [popup, notePopup]);
 
   useLayoutEffect(() => {
     if (view !== "weekly" || loading) return;
@@ -154,13 +160,17 @@ export default function MoodLogScreen({ userId }) {
     return cells;
   };
 
-  const getMoodForDay = (date) => {
+  const getEntryForDay = (date) => {
     if (!date) return null;
     const targetString = date.toDateString();
-    const matching = entries.find(
+    return entries.find(
       (e) => new Date(e.created_at).toDateString() === targetString
     );
-    return matching ? getMoodById(matching.mood) : null;
+  };
+
+  const getMoodForDay = (date) => {
+    const entry = getEntryForDay(date);
+    return entry ? getMoodById(entry.mood) : null;
   };
 
   const handlePrevMonth = () =>
@@ -169,8 +179,11 @@ export default function MoodLogScreen({ userId }) {
   const handleNextMonth = () =>
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
-  const openPopup = useCallback((date, mood) => {
-    if (mood) setPopup({ date, mood });
+  const openPopup = useCallback((date, entry) => {
+    if (entry) {
+      setPopup({ date, entry });
+      setShowNote(false);
+    }
   }, []);
 
   const weeklyWeeks = useMemo(() => getWeeklyWeeks(entries), [entries]);
@@ -220,7 +233,8 @@ export default function MoodLogScreen({ userId }) {
                     </h3>
                     <div className="moodlog-week-days">
                       {week.days.map((day) => {
-                        const mood = getMoodForDay(day);
+                        const entry = getEntryForDay(day);
+                        const mood = entry ? getMoodById(entry.mood) : null;
                         const isToday = day.toDateString() === new Date().toDateString();
                         const isFuture = day.getTime() > todayStart.getTime();
 
@@ -228,7 +242,7 @@ export default function MoodLogScreen({ userId }) {
                           <div
                             className={`moodlog-weekly-row ${isToday ? "today" : ""} ${mood ? "clickable" : ""} ${isFuture ? "future" : ""}`}
                             key={day.toISOString()}
-                            onClick={() => !isFuture && openPopup(day, mood)}
+                            onClick={() => !isFuture && openPopup(day, entry)}
                           >
                             <div className="moodlog-weekly-date">
                               <span className="weekday">{WEEKDAYS[day.getDay()]}</span>
@@ -281,7 +295,8 @@ export default function MoodLogScreen({ userId }) {
                   {getMonthlyDays().map((day, idx) => {
                     if (!day) return <div className="calendar-cell empty" key={`empty-${idx}`} />;
 
-                    const mood = getMoodForDay(day);
+                    const entry = getEntryForDay(day);
+                    const mood = entry ? getMoodById(entry.mood) : null;
                     const isToday = day.toDateString() === new Date().toDateString();
                     const cellKey = day.toISOString();
                     const isHovered = hoveredDay === cellKey;
@@ -296,7 +311,7 @@ export default function MoodLogScreen({ userId }) {
                         key={cellKey}
                         onMouseEnter={() => mood && setHoveredDay(cellKey)}
                         onMouseLeave={() => setHoveredDay(null)}
-                        onClick={() => openPopup(day, mood)}
+                        onClick={() => openPopup(day, entry)}
                         title={mood ? "" : day.toLocaleDateString()}
                       >
                         <span className="cell-num">{day.getDate()}</span>
@@ -337,8 +352,37 @@ export default function MoodLogScreen({ userId }) {
               &times;
             </button>
             <span className="mood-popup-date">{formatPopupDate(popup.date)}</span>
-            <PetImage mood={popup.mood} className="mood-popup-img" />
-            <span className="mood-popup-label">{popup.mood.label.toLowerCase()}</span>
+            <PetImage mood={getMoodById(popup.entry.mood)} className="mood-popup-img" />
+            <span className="mood-popup-label">
+              {getMoodById(popup.entry.mood)?.label.toLowerCase()}
+            </span>
+            {popup.entry.note ? (
+              <button
+                className="mood-popup-note-btn"
+                onClick={() => setNotePopup(popup.entry.note)}
+              >
+                view note
+              </button>
+            ) : (
+              <p className="mood-popup-no-note">no note for this log</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {notePopup && (
+        <div className="mood-popup-overlay" onClick={() => setNotePopup(null)}>
+          <div className="mood-note-popup" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="mood-popup-close"
+              onClick={() => setNotePopup(null)}
+              aria-label="Close note"
+            >
+              &times;
+            </button>
+            <div className="mood-note-popup-content">
+              <p className="mood-note-popup-text">{notePopup}</p>
+            </div>
           </div>
         </div>
       )}

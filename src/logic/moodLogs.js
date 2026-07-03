@@ -49,7 +49,7 @@ export async function logMood(userId, moodId) {
     supabase
       .from("mood_logs")
       .insert({ user_id: userId, mood: moodId })
-      .select("id, mood, created_at")
+      .select("id, mood, note, created_at")
       .single()
   );
 
@@ -73,7 +73,7 @@ export async function fetchLatestMoodLog(userId) {
       const { data, error } = await withTimeout(
         supabase
           .from("mood_logs")
-          .select("id, mood, created_at")
+          .select("id, mood, note, created_at")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(1)
@@ -90,6 +90,36 @@ export async function fetchLatestMoodLog(userId) {
   return localLogs[0] ?? null;
 }
 
+export async function updateMoodLogNote(logId, note) {
+  if (!logId) {
+    throw new Error("Missing mood log identifier.");
+  }
+
+  if (!isSupabaseConfigured) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { data, error } = await withTimeout(
+    supabase
+      .from("mood_logs")
+      .update({ note })
+      .eq("id", logId)
+      .select("id, user_id, mood, note, created_at")
+      .single()
+  );
+
+  if (error) throw error;
+  if (!data) throw new Error("No data returned after updating note.");
+
+  try {
+    cacheLogAtFront(data.user_id, data);
+  } catch (e) {
+    console.error("Local storage write error:", e);
+  }
+
+  return data;
+}
+
 export async function fetchMoodHistory(userId, limit = 100) {
   if (!userId) return [];
 
@@ -98,7 +128,7 @@ export async function fetchMoodHistory(userId, limit = 100) {
       const { data, error } = await withTimeout(
         supabase
           .from("mood_logs")
-          .select("id, mood, created_at")
+          .select("id, mood, note, created_at")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(limit)

@@ -13,6 +13,7 @@ create table public.mood_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   mood text not null,
+  note text,
   created_at timestamptz not null default now(),
   constraint mood_logs_mood_valid check (
     mood in (
@@ -50,6 +51,8 @@ create policy "Users can view own mood logs" on public.mood_logs for
 select to authenticated using (auth.uid() = user_id);
 create policy "Users can insert own mood logs" on public.mood_logs for
 insert to authenticated with check (auth.uid() = user_id);
+create policy "Users can update own mood logs" on public.mood_logs for
+update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 -- ---------------------------------------------------------------------------
 -- Cleanup from older schema versions
 -- ---------------------------------------------------------------------------

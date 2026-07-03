@@ -22,6 +22,73 @@
   text-align: center;
 }
 
+.message-note-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.message-note-label {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #33241C;
+  text-transform: lowercase;
+}
+
+.message-note-input {
+  width: 100%;
+  min-height: 90px;
+  border: 2px solid #33241C;
+  border-radius: 10px;
+  background: #F0DECA;
+  color: #33241C;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  padding: 10px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.message-note-save-btn {
+  width: fit-content;
+  align-self: flex-end;
+  background: #634636;
+  color: #F0DECA;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.message-note-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message-note-saved {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  color: #33241C;
+  background: #F0DECA;
+  border: 2px solid #33241C;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 0;
+}
+
+.message-note-status {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  color: #33241C;
+  opacity: 0.85;
+  margin: 0;
+}
+
 .message-pet-frame-custom {
   display: flex;
   align-items: center;

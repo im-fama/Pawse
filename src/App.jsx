@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import AuthScreen from "./screens/AuthScreen";
 import HomeScreen from "./screens/HomeScreen";
 import MoodCarouselScreen from "./screens/MoodCarouselScreen";
@@ -76,6 +76,11 @@ function PawseRouter() {
     );
   }
 
+  // Redirect the root path to home for logged-in users.
+  if (location.pathname === "/" || location.pathname === "") {
+    return <Navigate to="/home" replace />;
+  }
+
   const daysApart = daysSince(latestMoodLog?.created_at);
 
   return (
@@ -94,7 +99,7 @@ function PawseRouter() {
             />
           }
         />
-        <Route path="/message/:moodId" element={<MessageScreen />} />
+        <Route path="/message/:moodId" element={<MessageScreen userId={userId} />} />
         <Route path="/mood-log" element={<MoodLogScreen userId={userId} />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

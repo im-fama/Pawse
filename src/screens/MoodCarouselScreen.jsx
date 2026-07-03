@@ -27,10 +27,9 @@ export default function MoodCarouselScreen({ daysApart, userId, onMoodLogged }) 
     setSubmitting(true);
     setError("");
     try {
-      // Log the selected mood in local storage / db
-      await logMood(userId, mood.id);
+      const data = await logMood(userId, mood.id);
       if (onMoodLogged) onMoodLogged(mood.id);
-      navigate(`/message/${mood.id}`);
+      navigate(`/message/${mood.id}`, { state: { logId: data?.id } });
     } catch (err) {
       setError("Couldn't save that, try again?");
       setSubmitting(false);
