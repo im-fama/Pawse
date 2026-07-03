@@ -1,0 +1,78 @@
+@import url("https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap");
+
+* {
+  box-sizing: border-box;
+  font-family: "Pixelify Sans", monospace;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #33241C;
+  color: #F0DECA;
+  font-family: "Pixelify Sans", monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-screen {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: "Pixelify Sans", monospace;
+}
+
+input {
+  font-family: "Pixelify Sans", monospace;
+}
+
+:focus-visible {
+  outline: 2px solid #A9836C;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #634636;
+  color: #F0DECA;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 32px;
+  animation: app-loading-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes app-loading-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
