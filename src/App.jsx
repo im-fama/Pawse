@@ -57,7 +57,7 @@ function PawseRouter() {
   if (authLoading) {
     return (
       <div className="app-loading">
-        <p>🐾</p>
+        <img src="/icons/paw.png" alt="Loading" className="app-loading-icon" />
       </div>
     );
   }
@@ -71,7 +71,7 @@ function PawseRouter() {
   if (stateLoading) {
     return (
       <div className="app-loading">
-        <p>🐾</p>
+        <img src="/icons/paw.png" alt="Loading" className="app-loading-icon" />
       </div>
     );
   }

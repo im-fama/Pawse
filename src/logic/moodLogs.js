@@ -35,34 +35,66 @@ function cacheLogAtFront(userId, log) {
   writeLocalLogs(userId, withoutDuplicate);
 }
 
+function updateLocalLog(userId, logId, updates) {
+  if (!userId || !logId) return null;
+
+  const localLogs = readLocalLogs(userId);
+  const logIndex = localLogs.findIndex((entry) => entry.id === logId);
+  if (logIndex === -1) return null;
+
+  const updatedLog = { ...localLogs[logIndex], ...updates };
+  localLogs[logIndex] = updatedLog;
+  writeLocalLogs(userId, localLogs);
+  return updatedLog;
+}
+
 // Saves a mood check-in for the signed-in user.
 export async function logMood(userId, moodId) {
   if (!userId) {
     throw new Error("You must be signed in to log a mood.");
   }
 
+  const fallbackLog = {
+    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    user_id: userId,
+    mood: moodId,
+    note: null,
+    created_at: new Date().toISOString(),
+  };
+
   if (!isSupabaseConfigured) {
-    throw new Error("Supabase is not configured.");
+    cacheLogAtFront(userId, fallbackLog);
+    return fallbackLog;
   }
-
-  const { data, error } = await withTimeout(
-    supabase
-      .from("mood_logs")
-      .insert({ user_id: userId, mood: moodId })
-      .select("id, mood, note, created_at")
-      .single()
-  );
-
-  if (error) throw error;
-  if (!data) throw new Error("No data returned after saving mood.");
 
   try {
-    cacheLogAtFront(userId, data);
-  } catch (e) {
-    console.error("Local storage write error:", e);
-  }
+    const { data, error } = await withTimeout(
+      supabase
+        .from("mood_logs")
+        .insert({ user_id: userId, mood: moodId })
+        .select("id, mood, note, created_at")
+        .single()
+    );
 
-  return data;
+    if (error) throw error;
+    if (!data) throw new Error("No data returned after saving mood.");
+
+    try {
+      cacheLogAtFront(userId, data);
+    } catch (e) {
+      console.error("Local storage write error:", e);
+    }
+
+    return data;
+  } catch (err) {
+    console.warn("Falling back to local mood log storage:", err);
+    try {
+      cacheLogAtFront(userId, fallbackLog);
+    } catch (e) {
+      console.error("Local storage write error:", e);
+    }
+    return fallbackLog;
+  }
 }
 
 export async function fetchLatestMoodLog(userId) {
@@ -90,34 +122,114 @@ export async function fetchLatestMoodLog(userId) {
   return localLogs[0] ?? null;
 }
 
-export async function updateMoodLogNote(logId, note) {
+export async function fetchMoodLogById(logId, userId) {
+  if (!logId) return null;
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("mood_logs")
+          .select("id, user_id, mood, note, created_at")
+          .eq("id", logId)
+          .maybeSingle()
+      );
+      if (error) throw error;
+      if (data) {
+        if (userId) {
+          try {
+            cacheLogAtFront(userId, data);
+          } catch (e) {
+            console.error("Local storage write error:", e);
+          }
+        }
+        return data;
+      }
+    } catch (err) {
+      console.warn("Failed loading mood log by id from Supabase:", err.message);
+    }
+  }
+
+  const localLogs = readLocalLogs(userId);
+  return localLogs.find((entry) => entry.id === logId) ?? null;
+}
+
+export async function updateMoodLogNote(logId, note, userId) {
   if (!logId) {
     throw new Error("Missing mood log identifier.");
   }
 
   if (!isSupabaseConfigured) {
+    const updatedLog = updateLocalLog(userId, logId, { note });
+    if (updatedLog) return updatedLog;
     throw new Error("Supabase is not configured.");
   }
 
-  const { data, error } = await withTimeout(
-    supabase
-      .from("mood_logs")
-      .update({ note })
-      .eq("id", logId)
-      .select("id, user_id, mood, note, created_at")
-      .single()
-  );
-
-  if (error) throw error;
-  if (!data) throw new Error("No data returned after updating note.");
-
   try {
-    cacheLogAtFront(data.user_id, data);
-  } catch (e) {
-    console.error("Local storage write error:", e);
+    const { data, error } = await withTimeout(
+      supabase
+        .from("mood_logs")
+        .update({ note })
+        .eq("id", logId)
+        .select("id, user_id, mood, note, created_at")
+        .single()
+    );
+
+    if (error) throw error;
+    if (!data) throw new Error("No data returned after updating note.");
+
+    try {
+      cacheLogAtFront(data.user_id, data);
+    } catch (e) {
+      console.error("Local storage write error:", e);
+    }
+
+    return data;
+  } catch (err) {
+    console.warn("Falling back to local note update:", err);
+    const updatedLog = updateLocalLog(userId, logId, { note });
+    if (updatedLog) return updatedLog;
+    throw err;
+  }
+}
+
+export async function deleteMoodLogNote(logId, userId) {
+  if (!logId) {
+    throw new Error("Missing mood log identifier.");
   }
 
-  return data;
+  if (!isSupabaseConfigured) {
+    const updatedLog = updateLocalLog(userId, logId, { note: null });
+    if (updatedLog) return updatedLog;
+    throw new Error("Supabase is not configured.");
+  }
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from("mood_logs")
+        .update({ note: null })
+        .eq("id", logId)
+        .select("id, user_id, mood, note, created_at")
+        .single()
+    );
+
+    if (error) throw error;
+    if (!data) throw new Error("No data returned after deleting note.");
+
+    try {
+      cacheLogAtFront(userId ?? data.user_id, data);
+    } catch (e) {
+      console.error("Local storage write error:", e);
+    }
+
+    return data;
+  } catch (err) {
+    console.warn("Falling back to local note deletion:", err);
+    const updatedLog = updateLocalLog(userId, logId, { note: null });
+    if (updatedLog) return updatedLog;
+    throw err;
+  }
 }
 
 export async function fetchMoodHistory(userId, limit = 100) {

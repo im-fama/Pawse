@@ -39,11 +39,60 @@ export const MOODS = [
       "Thinking about you. Again. It happens more than I'd like to admit, but here we are. You're just very hard to stop thinking about.",
   },
   {
-    id: "love_overdose",
-    label: "Love overdose",
-    image: "love_overdose.png",
+    id: "dreamy",
+    label: "Dreamy",
+    image: "dreamy.png",
     message:
-      "Too much love, system overload. My heart cannot hold this many feelings at once. I might just float away from how full it is.",
+      "The world feels soft and full of possibility tonight. I might drift off into a lovely little daydream and never come back.",
+  },
+  {
+    id: "calm",
+    label: "Calm",
+    image: "calm.png",
+    message:
+      "Everything has gone quiet, and somehow that feels wonderful. I am content to let the moment stay gentle and still.",
+  },
+  {
+    id: "excited",
+    label: "Excited",
+    image: "excited.png",
+    message:
+      "My whole body is buzzing and I cannot stop thinking about what is about to happen. This feels huge and wonderful and a little bit wild.",
+  },
+  {
+    id: "romantic",
+    label: "Romantic",
+    image: "romantic.png",
+    message:
+      "Everything feels sweeter and softer and more sparkly than usual. My heart is doing a little dance and I am not even trying to stop it.",
+  },
+  {
+    id: "jealous",
+    label: "Jealous",
+    image: "jealous.png",
+    message:
+      "That sting is real and I wish it was not. I am trying very hard not to let it take over the whole room.",
+  },
+  {
+    id: "lonely",
+    label: "Lonely",
+    image: "lonely.png",
+    message:
+      "The room feels too big and the silence feels too loud. I could use a little comfort, a little company, or just someone to sit with me.",
+  },
+  {
+    id: "furious",
+    label: "Furious",
+    image: "furious.png",
+    message:
+      "I am so angry I can barely think straight. Everything feels unfair and I need a moment before I say something I cannot take back.",
+  },
+  {
+    id: "dead",
+    label: "Dead",
+    image: "dead.png",
+    message:
+      "I feel completely drained and flat and done. There is nothing left in me and I just need to shut down for a while.",
   },
   {
     id: "cozy",
@@ -130,9 +179,9 @@ export const MOODS = [
       "I cannot stop giggling, send help. Something was funny three minutes ago and I'm still not over it. This is a problem now.",
   },
   {
-    id: "silly",
-    label: "Silly",
-    image: "silly.png",
+    id: "goofy",
+    label: "Goofy",
+    image: "goofy.png",
     message:
       "Brain empty, vibes only. I have no thoughts, just feelings, and most of those are nonsense. Don't ask me anything important right now.",
   },

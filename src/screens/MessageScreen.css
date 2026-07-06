@@ -51,9 +51,34 @@
   box-sizing: border-box;
 }
 
+.message-note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.message-note-saved-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  background: #F0DECA;
+  border: 2px solid #33241C;
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+}
+
+.message-note-saved-text {
+  width: 100%;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  color: #33241C;
+}
+
 .message-note-save-btn {
   width: fit-content;
-  align-self: flex-end;
   background: #634636;
   color: #F0DECA;
   border: none;
@@ -65,7 +90,24 @@
   cursor: pointer;
 }
 
-.message-note-save-btn:disabled {
+.message-note-edit-btn,
+.message-note-delete-btn {
+  width: fit-content;
+  min-width: 38px;
+  background: #A9836C;
+  color: #33241C;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.message-note-save-btn:disabled,
+.message-note-edit-btn:disabled,
+.message-note-delete-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
