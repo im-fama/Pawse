@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient";
+import { resetReminderState } from "./reminders";
 
 function logsKey(userId) {
   return `pawse_mood_logs_${userId}`;
@@ -85,6 +86,12 @@ export async function logMood(userId, moodId) {
       console.error("Local storage write error:", e);
     }
 
+    try {
+      await resetReminderState(userId, data.created_at ?? new Date().toISOString());
+    } catch (e) {
+      console.warn("Reminder reset failed:", e);
+    }
+
     return data;
   } catch (err) {
     console.warn("Falling back to local mood log storage:", err);
@@ -93,6 +100,13 @@ export async function logMood(userId, moodId) {
     } catch (e) {
       console.error("Local storage write error:", e);
     }
+
+    try {
+      await resetReminderState(userId, fallbackLog.created_at);
+    } catch (e) {
+      console.warn("Reminder reset failed:", e);
+    }
+
     return fallbackLog;
   }
 }

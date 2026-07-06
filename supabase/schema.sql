@@ -66,3 +66,25 @@ update to authenticated using (auth.uid() = user_id) with check (auth.uid() = us
 drop trigger if exists mood_logs_sync_pet_state on public.mood_logs;
 drop function if exists public.sync_pet_state_from_mood_log();
 drop table if exists public.pet_state cascade;
+
+-- ---------------------------------------------------------------------------
+-- Reminder state
+-- ---------------------------------------------------------------------------
+drop table if exists public.user_reminder_state cascade;
+create table public.user_reminder_state (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  reminder_stage integer not null default 0,
+  last_mood_logged_at timestamptz,
+  last_reminder_sent_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+create index user_reminder_state_updated_at_idx on public.user_reminder_state (updated_at desc);
+comment on table public.user_reminder_state is 'Tracks when reminder emails have been sent for a user.';
+
+alter table public.user_reminder_state enable row level security;
+create policy "Users can view own reminder state" on public.user_reminder_state for
+select to authenticated using (auth.uid() = user_id);
+create policy "Users can insert own reminder state" on public.user_reminder_state for
+insert to authenticated with check (auth.uid() = user_id);
+create policy "Users can update own reminder state" on public.user_reminder_state for
+update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);

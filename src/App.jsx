@@ -6,6 +6,7 @@ import MoodCarouselScreen from "./screens/MoodCarouselScreen";
 import MessageScreen from "./screens/MessageScreen";
 import MoodLogScreen from "./screens/MoodLogScreen";
 import { fetchLatestMoodLog, daysSince } from "./logic/moodLogs";
+import { checkAndSendReminder } from "./logic/reminders";
 import { useAuth } from "./lib/useAuth";
 
 export default function App() {
@@ -52,6 +53,32 @@ function PawseRouter() {
       cancelled = true;
     };
   }, [location.pathname, userId, authLoading]);
+
+  useEffect(() => {
+    if (authLoading || !userId || !user?.email) return;
+
+    if (!latestMoodLog?.created_at && stateLoading) return;
+
+    let cancelled = false;
+
+    checkAndSendReminder(userId, user.email, latestMoodLog?.created_at)
+      .then((result) => {
+        if (!cancelled) {
+          if (result.sent) {
+            console.info("Reminder email queued", result.stage);
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.warn("Reminder check failed", err);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, latestMoodLog?.created_at, stateLoading, user?.email, userId]);
 
   // Waiting for Supabase session to initialise
   if (authLoading) {

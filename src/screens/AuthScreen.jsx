@@ -11,6 +11,8 @@ export default function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -22,6 +24,8 @@ export default function AuthScreen() {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   }
 
   async function handleSubmit(event) {
@@ -94,17 +98,31 @@ export default function AuthScreen() {
                 <label className="auth-label" htmlFor="auth-password">
                   password
                 </label>
-                <input
-                  id="auth-password"
-                  className="auth-input"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  placeholder={mode === "signup" ? "min. 6 characters" : "••••••"}
-                  minLength={6}
-                  required
-                />
+                <div className="auth-input-wrap">
+                  <input
+                    id="auth-password"
+                    className="auth-input"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    placeholder={mode === "signup" ? "min. 6 characters" : "••••••"}
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-eye-btn"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <img
+                      src={showPassword ? "/icons/close_eye.png" : "/icons/open_eye.png"}
+                      alt=""
+                      className="auth-eye-icon"
+                    />
+                  </button>
+                </div>
               </div>
 
               {mode === "signup" && (
@@ -112,16 +130,30 @@ export default function AuthScreen() {
                   <label className="auth-label" htmlFor="auth-confirm-password">
                     confirm password
                   </label>
-                  <input
-                    id="auth-confirm-password"
-                    className="auth-input"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                    placeholder="••••••"
-                    required
-                  />
+                  <div className="auth-input-wrap">
+                    <input
+                      id="auth-confirm-password"
+                      className="auth-input"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                      placeholder="••••••"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="auth-eye-btn"
+                      onClick={() => setShowConfirmPassword((value) => !value)}
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      <img
+                        src={showConfirmPassword ? "/icons/close_eye.png" : "/icons/open_eye.png"}
+                        alt=""
+                        className="auth-eye-icon"
+                      />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

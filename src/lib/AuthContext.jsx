@@ -7,19 +7,48 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get the current session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    let mounted = true;
+
+    async function initializeAuth() {
+      try {
+        const {
+          data: { session: existingSession },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (existingSession) {
+          try {
+            await supabase.auth.signOut({ scope: "global" });
+          } catch (signOutError) {
+            console.warn("Failed to clear existing session:", signOutError);
+          }
+        }
+
+        if (mounted) {
+          setSession(null);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (mounted) {
+          setSession(null);
+          setLoading(false);
+        }
+      }
+    }
+
+    initializeAuth();
 
     // Listen for auth state changes (sign in, sign out, token refresh, etc.)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
+      if (mounted) {
+        setSession(session);
+        setLoading(false);
+      }
     });
 
     return () => {
+      mounted = false;
       listener.subscription.unsubscribe();
     };
   }, []);
