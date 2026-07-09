@@ -52,7 +52,7 @@ export default function PawseWindow({
                 }`}
                 onClick={() => navigate("/chat")}
               >
-                chat with kitty
+                chat
               </button>
             </>
           ) : (

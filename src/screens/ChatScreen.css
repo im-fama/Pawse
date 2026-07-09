@@ -142,7 +142,39 @@
   flex-direction: column;
   height: 100%;
   padding: 10px;
+  gap: 8px;
   box-sizing: border-box;
+}
+
+.chat-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-mode-toggle button {
+  border: 2px solid #33241C;
+  border-radius: 6px;
+  background: #FFFBF7;
+  color: #33241C;
+  padding: 7px 8px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-mode-toggle button.active {
+  background: #634636;
+  color: #F0DECA;
+}
+
+.chat-panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .chat-loading {
@@ -169,6 +201,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .chat-avatar-wrap {
@@ -193,6 +226,14 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+}
+
+.chat-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .chat-pet-name {
@@ -310,6 +351,24 @@
   background: #634636;
   color: #F0DECA;
   border-radius: 10px 10px 2px 10px;
+}
+
+.chat-message-row.friend {
+  align-self: flex-start;
+}
+
+.chat-bubble.friend {
+  background: #FFF;
+  color: #33241C;
+  border-radius: 10px 10px 10px 2px;
+}
+
+.chat-sender-name {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8C6A53;
 }
 
 .chat-msg-text {
@@ -442,4 +501,66 @@
   border-radius: 50%;
   font-weight: 700;
   font-size: 10px;
+}
+
+.chat-setup-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.chat-setup-btn.secondary {
+  background: transparent;
+  color: #33241C;
+}
+
+.chat-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #33241C;
+  background: #A9836C;
+  flex-shrink: 0;
+}
+
+.chat-status-dot.online {
+  background: #63A66D;
+}
+
+.chat-status-dot.connecting {
+  background: #D4A33D;
+}
+
+.chat-status-dot.offline {
+  background: #C4433E;
+}
+
+.chat-name-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-name-input {
+  width: 96px;
+  border: 2px solid #33241C;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  background: #FFFBF7;
+  color: #33241C;
+  outline: none;
+}
+
+.chat-realtime-empty {
+  align-self: center;
+  margin: auto;
+  color: #725442;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  text-align: center;
+  max-width: 260px;
+  line-height: 1.5;
 }

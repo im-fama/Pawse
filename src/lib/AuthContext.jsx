@@ -62,10 +62,15 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function signUp(email, password) {
+  async function signUp(email, password, username) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username,
+        },
+      },
     });
     if (error) throw error;
     // Return data so the caller can check if a session was immediately created
