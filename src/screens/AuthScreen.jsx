@@ -57,6 +57,8 @@ export default function AuthScreen() {
         if (!result?.session) {
           setMessage("Account created! Check your email to confirm, then log in.");
           switchMode("login");
+        } else {
+          navigate("/home", { replace: true });
         }
       }
     } catch (err) {

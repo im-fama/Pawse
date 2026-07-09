@@ -1,21 +1,19 @@
 
 import { useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { onCloseMouseDown } from "../lib/windowControls";
 import { AuthContext } from "../lib/AuthContextObject";
 import "./PawseWindow.css";
 
 export default function PawseWindow({
-  title,
-  icon,
   children,
   footer,
-  onTitleClick,
   onBack,
   hideHomeBtn,
   hideSignOutBtn,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   // Read auth context directly (null-safe: defaults to null if outside AuthProvider)
   const auth = useContext(AuthContext);
   const user = auth?.user ?? null;
@@ -35,17 +33,34 @@ export default function PawseWindow({
   return (
     <div className="pawse-window">
       <div className="pawse-titlebar">
-        {onTitleClick ? (
-          <button type="button" className="pawse-titlebar-btn" onClick={onTitleClick}>
-            {icon && <img src="/icons/paw.png" alt="" className="pawse-titlebar-icon" />}
-            {title}
-          </button>
-        ) : (
-          <span className="pawse-titlebar-label">
-            {icon && <img src="/icons/paw.png" alt="" className="pawse-titlebar-icon" />}
-            {title}
-          </span>
-        )}
+        <div className="pawse-titlebar-left">
+          {user ? (
+            <>
+              <button
+                type="button"
+                className={`pawse-titlebar-btn titlebar-nav-btn ${
+                  location.pathname === "/mood-log" ? "active" : ""
+                }`}
+                onClick={() => navigate("/mood-log")}
+              >
+                mood log
+              </button>
+              <button
+                type="button"
+                className={`pawse-titlebar-btn titlebar-nav-btn ${
+                  location.pathname === "/chat" ? "active" : ""
+                }`}
+                onClick={() => navigate("/chat")}
+              >
+                chat with kitty
+              </button>
+            </>
+          ) : (
+            <span className="pawse-titlebar-label">
+              mood log
+            </span>
+          )}
+        </div>
 
         <div className="pawse-titlebar-controls">
           {/* Home button — only shown when logged in */}

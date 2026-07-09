@@ -57,7 +57,11 @@ export default function HomeScreen({ daysApart = 0 }) {
   }
 
   return (
-    <PawseWindow title="Pawse" icon="🐾">
+    <PawseWindow
+      title="mood log"
+      onTitleClick={() => navigate("/mood-log")}
+      icon="🐾"
+    >
       <div className="home-layout">
         <p className="home-greeting">kitty is happy to have you back!</p>
         <div className="pawse-inner-card home-inner-card">

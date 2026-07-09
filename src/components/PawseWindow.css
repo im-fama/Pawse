@@ -20,6 +20,25 @@
   -webkit-app-region: drag;
 }
 
+.pawse-titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-nav-btn {
+  min-width: unset !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  letter-spacing: 0.02em;
+}
+
+.titlebar-nav-btn.active {
+  background: #634636 !important;
+  border-color: #F0DECA !important;
+}
+
 .pawse-titlebar-label {
   display: flex;
   align-items: center;

@@ -524,6 +524,24 @@
   filter: brightness(1.05);
 }
 
+.mood-popup-chat-btn {
+  background: transparent;
+  color: #634636;
+  border: 2px solid #634636;
+  border-radius: 10px;
+  padding: 6px 18px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.mood-popup-chat-btn:hover {
+  background: #634636;
+  color: #F0DECA;
+}
+
 .mood-note-popup-content::-webkit-scrollbar {
   width: 8px;
 }

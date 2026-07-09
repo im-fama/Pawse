@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import AuthScreen from "./screens/AuthScreen";
 import HomeScreen from "./screens/HomeScreen";
 import MoodCarouselScreen from "./screens/MoodCarouselScreen";
 import MessageScreen from "./screens/MessageScreen";
 import MoodLogScreen from "./screens/MoodLogScreen";
+import ChatScreen from "./screens/ChatScreen";
 import { fetchLatestMoodLog, daysSince } from "./logic/moodLogs";
 import { checkAndSendReminder } from "./logic/reminders";
 import { useAuth } from "./lib/useAuth";
@@ -29,12 +30,16 @@ function PawseRouter() {
   useEffect(() => {
     // Reset when there's no user
     if (authLoading || !userId) {
-      setStateLoading(false);
+      setTimeout(() => {
+        setStateLoading(false);
+      }, 0);
       return;
     }
 
     let cancelled = false;
-    setStateLoading(true);
+    setTimeout(() => {
+      setStateLoading(true);
+    }, 0);
 
     fetchLatestMoodLog(userId)
       .then((log) => {
@@ -128,6 +133,7 @@ function PawseRouter() {
         />
         <Route path="/message/:moodId" element={<MessageScreen userId={userId} />} />
         <Route path="/mood-log" element={<MoodLogScreen userId={userId} />} />
+        <Route path="/chat" element={<ChatScreen userId={userId} />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </div>

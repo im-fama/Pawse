@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo, useLayoutEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PetImage from "../components/PetImage";
 import PawseWindow from "../components/PawseWindow";
 import { getMoodById } from "../data/moods";
@@ -92,6 +93,7 @@ function getWeeklyWeeks(entries) {
 }
 
 export default function MoodLogScreen({ userId }) {
+  const navigate = useNavigate();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("weekly"); // "weekly" | "monthly"
@@ -168,10 +170,7 @@ export default function MoodLogScreen({ userId }) {
     );
   };
 
-  const getMoodForDay = (date) => {
-    const entry = getEntryForDay(date);
-    return entry ? getMoodById(entry.mood) : null;
-  };
+
 
   const handlePrevMonth = () =>
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -182,7 +181,6 @@ export default function MoodLogScreen({ userId }) {
   const openPopup = useCallback((date, entry) => {
     if (entry) {
       setPopup({ date, entry });
-      setShowNote(false);
     }
   }, []);
 
@@ -366,6 +364,22 @@ export default function MoodLogScreen({ userId }) {
             ) : (
               <p className="mood-popup-no-note">no note for this log</p>
             )}
+            <button
+              className="mood-popup-chat-btn"
+              onClick={() => {
+                // Format date as YYYY-MM-DD local time
+                const d = popup.date;
+                const dateStr = [
+                  d.getFullYear(),
+                  String(d.getMonth() + 1).padStart(2, "0"),
+                  String(d.getDate()).padStart(2, "0"),
+                ].join("-");
+                setPopup(null);
+                navigate("/chat", { state: { date: dateStr } });
+              }}
+            >
+              view chat
+            </button>
           </div>
         </div>
       )}
