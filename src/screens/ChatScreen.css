@@ -1,141 +1,3 @@
-.chat-setup-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  gap: 16px;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-  height: 100%;
-}
-
-.chat-setup-title {
-  font-family: "Pixelify Sans", monospace;
-  font-size: 20px;
-  font-weight: 700;
-  color: #33241C;
-  margin: 0;
-}
-
-.chat-setup-desc {
-  font-family: "Pixelify Sans", monospace;
-  font-size: 13px;
-  color: #725442;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.chat-setup-desc a {
-  color: #634636;
-  font-weight: 700;
-  text-decoration: underline;
-}
-
-.chat-setup-form {
-  width: 100%;
-  max-width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.chat-setup-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  text-align: left;
-}
-
-.chat-setup-label {
-  font-family: "Pixelify Sans", monospace;
-  font-size: 12px;
-  font-weight: 700;
-  color: #33241C;
-}
-
-.chat-setup-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: 14px;
-  border: 2px solid #33241C;
-  border-radius: 6px;
-  background: #FFFBF7;
-  color: #33241C;
-}
-
-.chat-setup-textarea {
-  width: 100%;
-  height: 80px;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  font-family: monospace;
-  font-size: 12px;
-  border: 2px solid #33241C;
-  border-radius: 6px;
-  background: #FFFBF7;
-  color: #33241C;
-  resize: none;
-}
-
-.chat-header-manage-keys-btn {
-  background: transparent;
-  color: #634636;
-  border: 2px solid #634636;
-  border-radius: 6px;
-  padding: 3px 6px;
-  font-family: "Pixelify Sans", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.chat-header-manage-keys-btn:hover {
-  background: #634636;
-  color: #F0DECA;
-}
-
-.chat-setup-btn {
-  background: #634636;
-  color: #F0DECA;
-  border: 2px solid #33241C;
-  border-radius: 6px;
-  padding: 10px;
-  font-family: "Pixelify Sans", monospace;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-}
-
-.chat-setup-btn:hover {
-  filter: brightness(1.15);
-}
-
-.chat-setup-btn:active {
-  transform: translateY(0.5px);
-}
-
-.chat-setup-env-tip {
-  font-size: 11px;
-  color: #8C6A53;
-  margin: 0;
-}
-
-.chat-code {
-  font-family: monospace;
-  background: #EBD9C5;
-  padding: 2px 4px;
-  border-radius: 4px;
-  color: #33241C;
-}
-
 /* Chat Layout */
 .chat-inner-card {
   display: flex;
@@ -146,28 +8,34 @@
   box-sizing: border-box;
 }
 
-.chat-mode-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+
+/* Mood-log-style toggle */
+.chat-toggle-container {
+  display: flex;
+  background: #33241C;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
-.chat-mode-toggle button {
-  border: 2px solid #33241C;
-  border-radius: 6px;
-  background: #FFFBF7;
-  color: #33241C;
+.chat-toggle-btn {
+  flex: 1;
+  background: none;
+  border: none;
   padding: 7px 8px;
-  font-family: "Pixelify Sans", monospace;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
+  font-family: "Pixelify Sans", monospace;
+  color: #A9836C;
   cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.chat-mode-toggle button.active {
-  background: #634636;
-  color: #F0DECA;
+.chat-toggle-btn.active {
+  background: #E4C6AC;
+  color: #33241C;
 }
 
 .chat-panel {
@@ -564,3 +432,118 @@
   max-width: 260px;
   line-height: 1.5;
 }
+
+/* ── Two-column private chat layout ─────────────────────── */
+.chat-friends-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  gap: 10px;
+}
+
+.chat-friends-sidebar {
+  width: 130px;
+  background: #FFFBF7;
+  border: 2px solid #33241C;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.chat-sidebar-title {
+  margin: 0;
+  background: #33241C;
+  color: #F0DECA;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 0;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+}
+
+.chat-friends-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  gap: 4px;
+}
+
+.chat-friend-item {
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  color: #33241C;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chat-friend-item:hover {
+  background: rgba(51, 36, 28, 0.05);
+}
+
+.chat-friend-item.active {
+  background: #E4C6AC;
+  border-color: #33241C;
+  font-weight: 700;
+}
+
+.chat-friend-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-friends-empty {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  color: #A9836C;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.chat-friends-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-friends-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #FFFBF7;
+  border: 2px solid #33241C;
+  border-radius: 8px;
+  color: #725442;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 13px;
+  text-align: center;
+}
+
+.chat-placeholder-icon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.6;
+  image-rendering: pixelated;
+}
+

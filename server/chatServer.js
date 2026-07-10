@@ -41,7 +41,7 @@ function emitUserCount(room) {
 io.on("connection", (socket) => {
   let activeRoom = DEFAULT_ROOM;
 
-  socket.on("room:join", ({ room = DEFAULT_ROOM, name = "friend" } = {}) => {
+  socket.on("room:join", ({ room = DEFAULT_ROOM, name = "friend", userId = null } = {}) => {
     const nextRoom = String(room).trim() || DEFAULT_ROOM;
     const displayName = String(name).trim().slice(0, 32) || "friend";
 
@@ -52,20 +52,23 @@ io.on("connection", (socket) => {
 
     activeRoom = nextRoom;
     socket.data.name = displayName;
+    socket.data.userId = userId ? String(userId) : null;
     socket.join(activeRoom);
     socket.emit("room:history", getRoomHistory(activeRoom));
     emitUserCount(activeRoom);
   });
 
-  socket.on("chat:message", ({ room = activeRoom, text, name } = {}) => {
+  socket.on("chat:message", ({ room = activeRoom, text, name, userId } = {}) => {
     const cleanText = String(text || "").trim().slice(0, 500);
     if (!cleanText) return;
 
     const cleanRoom = String(room || DEFAULT_ROOM).trim() || DEFAULT_ROOM;
     const cleanName = String(name || socket.data.name || "friend").trim().slice(0, 32);
+    const senderUserId = userId ? String(userId) : (socket.data.userId || null);
     const message = {
       id: `${Date.now()}-${socket.id}`,
       senderId: socket.id,
+      senderUserId,
       senderName: cleanName || "friend",
       text: cleanText,
       createdAt: new Date().toISOString(),

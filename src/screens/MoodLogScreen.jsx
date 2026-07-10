@@ -99,6 +99,8 @@ export default function MoodLogScreen({ userId }) {
   const [view, setView] = useState("weekly"); // "weekly" | "monthly"
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDay, setHoveredDay] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState("all"); // "all" | "mood" | "note" | "date"
   // { date: Date, entry: moodEntry } | null
   const [popup, setPopup] = useState(null);
   const [notePopup, setNotePopup] = useState(null);
@@ -191,29 +193,170 @@ export default function MoodLogScreen({ userId }) {
     return d;
   }, []);
 
+  // Filtered entries for search
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const searchPlaceholder = useMemo(() => {
+    switch (searchFilter) {
+      case "mood":
+        return "search by mood (e.g. happy, sad)...";
+      case "note":
+        return "search by note content...";
+      case "date":
+        return "search by date (e.g. monday, june)...";
+      default:
+        return "search moods, notes, dates...";
+    }
+  }, [searchFilter]);
+
+  const searchResults = useMemo(() => {
+    if (!trimmedQuery) return [];
+    return entries.filter((entry) => {
+      const mood = getMoodById(entry.mood);
+      const moodLabel = mood?.label?.toLowerCase() || "";
+      const note = (entry.note || "").toLowerCase();
+      const dateStr = new Date(entry.created_at).toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }).toLowerCase();
+
+      if (searchFilter === "mood") {
+        return moodLabel.includes(trimmedQuery);
+      } else if (searchFilter === "note") {
+        return note.includes(trimmedQuery);
+      } else if (searchFilter === "date") {
+        return dateStr.includes(trimmedQuery);
+      } else {
+        return (
+          moodLabel.includes(trimmedQuery) ||
+          note.includes(trimmedQuery) ||
+          dateStr.includes(trimmedQuery)
+        );
+      }
+    });
+  }, [entries, trimmedQuery, searchFilter]);
+
   return (
     <PawseWindow title="Pawse" icon="🐾">
       <div className="pawse-inner-card moodlog-inner-card">
         <div className="moodlog-header-row">
-          <span className="moodlog-title-text">mood history</span>
-          <div className="moodlog-toggle-container">
-            <button
-              className={`moodlog-toggle-btn ${view === "weekly" ? "active" : ""}`}
-              onClick={() => setView("weekly")}
-            >
-              Weekly
-            </button>
-            <button
-              className={`moodlog-toggle-btn ${view === "monthly" ? "active" : ""}`}
-              onClick={() => setView("monthly")}
-            >
-              Monthly
-            </button>
+          <div className="moodlog-header-top">
+            <span className="moodlog-title-text">mood history</span>
+            <div className="moodlog-toggle-container">
+              <button
+                className={`moodlog-toggle-btn ${view === "weekly" ? "active" : ""}`}
+                onClick={() => setView("weekly")}
+              >
+                Weekly
+              </button>
+              <button
+                className={`moodlog-toggle-btn ${view === "monthly" ? "active" : ""}`}
+                onClick={() => setView("monthly")}
+              >
+                Monthly
+              </button>
+            </div>
+          </div>
+          <div className="moodlog-search-bar-container">
+            <div className="moodlog-filter-bar">
+              <button
+                type="button"
+                className={`moodlog-filter-btn ${searchFilter === "all" ? "active" : ""}`}
+                onClick={() => setSearchFilter("all")}
+              >
+                all
+              </button>
+              <button
+                type="button"
+                className={`moodlog-filter-btn ${searchFilter === "mood" ? "active" : ""}`}
+                onClick={() => setSearchFilter("mood")}
+              >
+                mood
+              </button>
+              <button
+                type="button"
+                className={`moodlog-filter-btn ${searchFilter === "note" ? "active" : ""}`}
+                onClick={() => setSearchFilter("note")}
+              >
+                note
+              </button>
+              <button
+                type="button"
+                className={`moodlog-filter-btn ${searchFilter === "date" ? "active" : ""}`}
+                onClick={() => setSearchFilter("date")}
+              >
+                date
+              </button>
+            </div>
+            <div className="moodlog-search-wrap">
+              <input
+                id="moodlog-search"
+                type="text"
+                className="moodlog-search-input"
+                placeholder={searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoComplete="off"
+                aria-label="Search mood history"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="moodlog-search-clear"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {loading ? (
           <div className="moodlog-loading">loading history...</div>
+        ) : trimmedQuery ? (
+          /* ── SEARCH RESULTS ── */
+          <div className="moodlog-view-container">
+            {searchResults.length === 0 ? (
+              <div className="moodlog-search-empty">
+                no moods found for &ldquo;{searchQuery}&rdquo;
+              </div>
+            ) : (
+              <div className="moodlog-search-results">
+                {searchResults.map((entry) => {
+                  const mood = getMoodById(entry.mood);
+                  const entryDate = new Date(entry.created_at);
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      className="moodlog-search-result-item"
+                      onClick={() => openPopup(entryDate, entry)}
+                    >
+                      <div className="moodlog-search-result-avatar">
+                        {mood && <PetImage mood={mood} className="moodlog-search-result-icon" />}
+                      </div>
+                      <div className="moodlog-search-result-text">
+                        <span className="moodlog-search-result-label">
+                          {mood?.label?.toLowerCase() || entry.mood}
+                        </span>
+                        <span className="moodlog-search-result-date">
+                          {formatPopupDate(entryDate)}
+                        </span>
+                        {entry.note && (
+                          <span className="moodlog-search-result-note">
+                            {entry.note.slice(0, 60)}{entry.note.length > 60 ? "…" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="moodlog-view-container" ref={scrollContainerRef}>
             {/* ── WEEKLY VIEW ── */}

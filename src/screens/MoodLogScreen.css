@@ -1,9 +1,17 @@
 .moodlog-header-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   margin-bottom: 12px;
+  gap: 8px;
+}
+
+.moodlog-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .moodlog-title-text {
@@ -12,7 +20,7 @@
   font-weight: 700;
   color: #33241C;
   text-transform: lowercase;
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .moodlog-toggle-container {
@@ -641,3 +649,176 @@
 .moodlog-signout-btn:hover {
   filter: brightness(1.15);
 }
+
+/* ── Search Bar ─────────────────────────────────────────────── */
+.moodlog-search-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.moodlog-filter-bar {
+  display: flex;
+  background: #33241C;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+  align-self: flex-start;
+}
+
+.moodlog-filter-btn {
+  background: none;
+  border: none;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: "Pixelify Sans", monospace;
+  color: #A9836C;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+  text-transform: lowercase;
+}
+
+.moodlog-filter-btn.active {
+  background: #E4C6AC;
+  color: #33241C;
+}
+
+.moodlog-search-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.moodlog-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 32px 8px 10px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  border: 2px solid #A9836C;
+  border-radius: 7px;
+  background: #FFFBF7;
+  color: #33241C;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.moodlog-search-input::placeholder {
+  color: #A9836C;
+  opacity: 0.8;
+}
+
+.moodlog-search-input:focus {
+  border-color: #634636;
+}
+
+.moodlog-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: #A9836C;
+  line-height: 1;
+  padding: 2px 4px;
+  transition: color 0.15s ease;
+}
+
+.moodlog-search-clear:hover {
+  color: #634636;
+}
+
+/* ── Search Results ─────────────────────────────────────────── */
+.moodlog-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding-right: 4px;
+}
+
+.moodlog-search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: #FFFBF7;
+  border: 2px solid #EBD9C5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  box-sizing: border-box;
+}
+
+.moodlog-search-result-item:hover {
+  border-color: #A9836C;
+  background: #F7EDDF;
+}
+
+.moodlog-search-result-avatar {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid #33241C;
+  border-radius: 6px;
+  background: #FFF;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.moodlog-search-result-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.moodlog-search-result-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.moodlog-search-result-label {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #33241C;
+  text-transform: lowercase;
+}
+
+.moodlog-search-result-date {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 10px;
+  color: #8C6A53;
+}
+
+.moodlog-search-result-note {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 10px;
+  color: #725442;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.moodlog-search-empty {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  color: #8C6A53;
+  text-align: center;
+  padding: 30px 0;
+}

@@ -57,7 +57,7 @@ export default function PawseWindow({
             </>
           ) : (
             <span className="pawse-titlebar-label">
-              mood log
+              pawse
             </span>
           )}
         </div>

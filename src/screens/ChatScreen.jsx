@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
 import PawseWindow from "../components/PawseWindow";
 import PetImage from "../components/PetImage";
 import { getMoodById } from "../data/moods";
 import { sendChatMessage } from "../logic/groq";
 import { fetchLatestMoodLog } from "../logic/moodLogs";
+import { getAllUsers } from "../lib/profiles";
+import {
+  sendPrivateMessage,
+  fetchPrivateMessages,
+  subscribeToPrivateMessages,
+} from "../logic/privateMessages";
 import "./ChatScreen.css";
 
-const REALTIME_ROOM = "pawse-global";
-const CHAT_SERVER_URL =
-  import.meta.env.VITE_CHAT_SERVER_URL || "http://localhost:3001";
+// Read the Groq API key directly from environment
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
 
 function getTodayDateString() {
   const today = new Date();
@@ -35,36 +39,13 @@ function formatOptionDate(dateStr) {
   }
 }
 
-function loadStoredGroqKeys() {
-  const raw = localStorage.getItem("pawse_groq_api_keys") || "";
-  if (raw) {
-    return raw.split(",").map((k) => k.trim()).filter(Boolean);
-  }
-
-  const single =
-    import.meta.env.VITE_GROQ_API_KEY ||
-    localStorage.getItem("pawse_groq_api_key") ||
-    "";
-  return single ? [single] : [];
-}
-
-function getInitialName(userId) {
-  const savedName = localStorage.getItem("pawse_chat_display_name");
-  if (savedName) return savedName;
-  return userId ? `friend-${String(userId).slice(0, 5)}` : "friend";
-}
-
 export default function ChatScreen({ userId }) {
   const navigate = useNavigate();
   const location = useLocation();
   const messagesEndRef = useRef(null);
   const realtimeEndRef = useRef(null);
-  const socketRef = useRef(null);
 
   const [chatMode, setChatMode] = useState(location.state?.mode || "ai");
-  const [apiKeys, setApiKeys] = useState(loadStoredGroqKeys);
-  const [tempKeys, setTempKeys] = useState(() => apiKeys.join("\n"));
-  const [showKeyManager, setShowKeyManager] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(
     () => location.state?.date || getTodayDateString()
@@ -77,13 +58,21 @@ export default function ChatScreen({ userId }) {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState("");
 
-  const [displayName, setDisplayName] = useState(() => getInitialName(userId));
-  const [draftDisplayName, setDraftDisplayName] = useState(displayName);
+  // Friends & DM state
+  const [friends, setFriends] = useState([]);
+  const [activeFriend, setActiveFriend] = useState(null);
   const [realtimeMessages, setRealtimeMessages] = useState([]);
   const [realtimeInput, setRealtimeInput] = useState("");
-  const [realtimeStatus, setRealtimeStatus] = useState("offline");
-  const [onlineCount, setOnlineCount] = useState(0);
 
+  // Fetch all users/friends
+  useEffect(() => {
+    if (!userId) return;
+    getAllUsers(userId).then((users) => {
+      setFriends(users);
+    });
+  }, [userId]);
+
+  // Load AI chat dates
   useEffect(() => {
     if (!userId) return;
 
@@ -99,6 +88,7 @@ export default function ChatScreen({ userId }) {
     setTimeout(() => setChattedDates(dates), 0);
   }, [userId]);
 
+  // Load AI Chat history for selected date
   useEffect(() => {
     if (!userId) {
       setTimeout(() => setLoading(false), 0);
@@ -186,46 +176,33 @@ export default function ChatScreen({ userId }) {
     };
   }, [userId, selectedDate]);
 
+  // Handle DM subscription and history loading
   useEffect(() => {
-    if (chatMode !== "realtime") return undefined;
+    if (chatMode !== "realtime" || !activeFriend?.id || !userId) return;
 
-    setTimeout(() => setRealtimeStatus("connecting"), 0);
-    const socket = io(CHAT_SERVER_URL, {
-      transports: ["websocket", "polling"],
-    });
-    socketRef.current = socket;
+    let mounted = true;
+    setRealtimeMessages([]);
 
-    socket.on("connect", () => {
-      setRealtimeStatus("online");
-      socket.emit("room:join", { room: REALTIME_ROOM, name: displayName });
+    fetchPrivateMessages(userId, activeFriend.id).then((history) => {
+      if (mounted) {
+        setRealtimeMessages(history);
+      }
     });
 
-    socket.on("connect_error", () => {
-      setRealtimeStatus("offline");
-    });
-
-    socket.on("disconnect", () => {
-      setRealtimeStatus("offline");
-      setOnlineCount(0);
-    });
-
-    socket.on("room:history", (history) => {
-      setRealtimeMessages(Array.isArray(history) ? history : []);
-    });
-
-    socket.on("room:user-count", (count) => {
-      setOnlineCount(Number(count) || 0);
-    });
-
-    socket.on("chat:message", (message) => {
-      setRealtimeMessages((current) => [...current, message]);
+    const subscription = subscribeToPrivateMessages(userId, activeFriend.id, (newMsg) => {
+      if (mounted) {
+        setRealtimeMessages((current) => {
+          if (current.some((m) => m.id === newMsg.id)) return current;
+          return [...current, newMsg];
+        });
+      }
     });
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      mounted = false;
+      if (subscription?.unsubscribe) subscription.unsubscribe();
     };
-  }, [chatMode, displayName]);
+  }, [chatMode, activeFriend?.id, userId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -235,35 +212,11 @@ export default function ChatScreen({ userId }) {
     realtimeEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [realtimeMessages]);
 
-  function handleSaveKeys(e) {
-    e.preventDefault();
-    const parsedKeys = tempKeys
-      .split(/[\n,]/)
-      .map((k) => k.trim())
-      .filter(Boolean);
-
-    localStorage.removeItem("pawse_gemini_api_keys");
-    localStorage.removeItem("pawse_gemini_api_key");
-
-    if (parsedKeys.length === 0) {
-      localStorage.removeItem("pawse_groq_api_keys");
-      localStorage.removeItem("pawse_groq_api_key");
-      setApiKeys([]);
-    } else {
-      localStorage.setItem("pawse_groq_api_keys", parsedKeys.join(","));
-      localStorage.removeItem("pawse_groq_api_key");
-      setApiKeys(parsedKeys);
-    }
-
-    setShowKeyManager(false);
-    setError("");
-  }
-
   async function handleSendMessage(e) {
     e.preventDefault();
     const text = inputText.trim();
     const todayStr = getTodayDateString();
-    if (!text || isTyping || selectedDate !== todayStr || apiKeys.length === 0) return;
+    if (!text || isTyping || selectedDate !== todayStr || !GROQ_API_KEY) return;
 
     setError("");
     const newMsg = { sender: "user", text };
@@ -276,146 +229,79 @@ export default function ChatScreen({ userId }) {
     const chatKey = `pawse_chat_history_${userId}_${todayStr}`;
     localStorage.setItem(chatKey, JSON.stringify(messagesWithUser));
 
-    let responseText = "";
-    let lastError = "";
+    try {
+      const responseText = await sendChatMessage(
+        messages,
+        text,
+        todayMood ? todayMood.label.toLowerCase() : null,
+        GROQ_API_KEY
+      );
 
-    for (let i = 0; i < apiKeys.length; i += 1) {
-      const key = apiKeys[i];
-      try {
-        responseText = await sendChatMessage(
-          messages,
-          text,
-          todayMood ? todayMood.label.toLowerCase() : null,
-          key
-        );
-
-        if (i > 0) {
-          const reordered = [key, ...apiKeys.filter((k) => k !== key)];
-          setApiKeys(reordered);
-          localStorage.setItem("pawse_groq_api_keys", reordered.join(","));
-        }
-        break;
-      } catch (err) {
-        console.warn(`Groq API key index ${i} failed:`, err);
-        lastError = err.message;
+      if (responseText) {
+        const messagesWithKitty = [
+          ...messagesWithUser,
+          { sender: "kitty", text: responseText },
+        ];
+        setMessages(messagesWithKitty);
+        localStorage.setItem(chatKey, JSON.stringify(messagesWithKitty));
+      } else {
+        setError("Kitty couldn't respond. Try again later.");
       }
+    } catch (err) {
+      console.warn("Groq API failed:", err);
+      setError(err.message || "Kitty couldn't respond. Try again later.");
+    } finally {
+      setIsTyping(false);
     }
-
-    if (responseText) {
-      const messagesWithKitty = [
-        ...messagesWithUser,
-        { sender: "kitty", text: responseText },
-      ];
-      setMessages(messagesWithKitty);
-      localStorage.setItem(chatKey, JSON.stringify(messagesWithKitty));
-    } else {
-      setError(lastError || "All configured Groq API keys failed. Try again later.");
-    }
-
-    setIsTyping(false);
   }
 
-  function handleDisplayNameSave(e) {
-    e.preventDefault();
-    const nextName = draftDisplayName.trim().slice(0, 32) || "friend";
-    localStorage.setItem("pawse_chat_display_name", nextName);
-    setDisplayName(nextName);
-  }
-
-  function handleRealtimeSend(e) {
+  async function handleRealtimeSend(e) {
     e.preventDefault();
     const text = realtimeInput.trim();
-    if (!text || realtimeStatus !== "online") return;
+    if (!text || !activeFriend?.id || !userId) return;
 
-    socketRef.current?.emit("chat:message", {
-      room: REALTIME_ROOM,
-      name: displayName,
-      text,
-    });
-    setRealtimeInput("");
+    setError("");
+    try {
+      const newMsg = await sendPrivateMessage(userId, activeFriend.id, text);
+      setRealtimeMessages((prev) => {
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
+      setRealtimeInput("");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to send message. Try again?");
+    }
   }
 
   const isToday = selectedDate === getTodayDateString();
   const activeMood = todayMood || { id: "calm", label: "Calm", image: "calm.png" };
-  const aiChatDisabled = !isToday || isTyping || apiKeys.length === 0;
+  const aiChatDisabled = !isToday || isTyping || !GROQ_API_KEY;
 
   return (
     <PawseWindow title="chat" onBack={() => navigate("/home")}>
       <div className="pawse-inner-card chat-inner-card">
-        <div className="chat-mode-toggle" aria-label="Chat mode">
+        {/* Toggle navigation */}
+        <div className="chat-toggle-container" aria-label="Chat mode">
           <button
             type="button"
-            className={chatMode === "ai" ? "active" : ""}
+            className={`chat-toggle-btn ${chatMode === "ai" ? "active" : ""}`}
             onClick={() => setChatMode("ai")}
           >
-            ai chat
+            kitty
           </button>
           <button
             type="button"
-            className={chatMode === "realtime" ? "active" : ""}
+            className={`chat-toggle-btn ${chatMode === "realtime" ? "active" : ""}`}
             onClick={() => setChatMode("realtime")}
           >
-            real time chat
+            chat with friends
           </button>
         </div>
 
         {chatMode === "ai" ? (
           <div className="chat-panel">
-            {apiKeys.length === 0 || showKeyManager ? (
-              <div className="chat-setup-card">
-                <h2 className="chat-setup-title">
-                  {showKeyManager ? "manage groq keys" : "ai chat setup"}
-                </h2>
-                <p className="chat-setup-desc">
-                  Paste one or more Groq API keys below. Get a key from{" "}
-                  <a
-                    href="https://console.groq.com/keys"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    GroqCloud
-                  </a>
-                  .
-                </p>
-
-                <form onSubmit={handleSaveKeys} className="chat-setup-form">
-                  <div className="chat-setup-field">
-                    <label htmlFor="api-keys-input" className="chat-setup-label">
-                      groq api keys:
-                    </label>
-                    <textarea
-                      id="api-keys-input"
-                      className="chat-setup-textarea"
-                      placeholder={"gsk_...\ngsk_..."}
-                      value={tempKeys}
-                      onChange={(e) => setTempKeys(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="chat-setup-actions">
-                    {showKeyManager && (
-                      <button
-                        type="button"
-                        className="chat-setup-btn secondary"
-                        onClick={() => setShowKeyManager(false)}
-                      >
-                        cancel
-                      </button>
-                    )}
-                    <button type="submit" className="chat-setup-btn">
-                      save keys
-                    </button>
-                  </div>
-                </form>
-
-                {!showKeyManager && (
-                  <p className="chat-setup-env-tip">
-                    Or use <code className="chat-code">VITE_GROQ_API_KEY</code> in{" "}
-                    <code className="chat-code">.env</code>.
-                  </p>
-                )}
-              </div>
-            ) : loading ? (
+            {loading ? (
               <div className="chat-loading">loading...</div>
             ) : (
               <>
@@ -427,14 +313,6 @@ export default function ChatScreen({ userId }) {
                     <div className="chat-header-text">
                       <div className="chat-header-title-row">
                         <span className="chat-pet-name">kitty ai</span>
-                        <button
-                          type="button"
-                          className="chat-header-manage-keys-btn"
-                          onClick={() => setShowKeyManager(true)}
-                          title="Manage Groq API keys"
-                        >
-                          keys ({apiKeys.length})
-                        </button>
                       </div>
                       {todayMood && isToday && (
                         <span className="chat-mood-badge">
@@ -536,88 +414,101 @@ export default function ChatScreen({ userId }) {
             )}
           </div>
         ) : (
-          <div className="chat-panel">
-            <div className="chat-header-info">
-              <div className="chat-header-left-pane">
-                <div className={`chat-status-dot ${realtimeStatus}`} />
-                <div className="chat-header-text">
-                  <span className="chat-pet-name">real time room</span>
-                  <span className="chat-mood-badge">
-                    {realtimeStatus === "online"
-                      ? `${onlineCount} online`
-                      : realtimeStatus}
-                  </span>
-                </div>
+          <div className="chat-friends-layout">
+            <div className="chat-friends-sidebar">
+              <h3 className="chat-sidebar-title">friends</h3>
+              <div className="chat-friends-list">
+                {friends.length === 0 ? (
+                  <div className="chat-friends-empty">no users found</div>
+                ) : (
+                  friends.map((friend) => (
+                    <button
+                      key={friend.id}
+                      type="button"
+                      className={`chat-friend-item ${
+                        activeFriend?.id === friend.id ? "active" : ""
+                      }`}
+                      onClick={() => {
+                        setActiveFriend(friend);
+                        setError("");
+                      }}
+                    >
+                      <span className="chat-friend-name">{friend.username}</span>
+                    </button>
+                  ))
+                )}
               </div>
-
-              <form className="chat-name-form" onSubmit={handleDisplayNameSave}>
-                <input
-                  className="chat-name-input"
-                  value={draftDisplayName}
-                  onChange={(e) => setDraftDisplayName(e.target.value)}
-                  maxLength={32}
-                  aria-label="Display name"
-                />
-                <button type="submit" className="chat-history-return-btn">
-                  save
-                </button>
-              </form>
             </div>
 
-            <div className="chat-messages-container">
-              {realtimeMessages.length === 0 && (
-                <div className="chat-realtime-empty">
-                  No messages yet. Say hello when someone else is here.
-                </div>
-              )}
-
-              {realtimeMessages.map((msg) => {
-                const mine = msg.senderName === displayName;
-                return (
-                  <div
-                    key={msg.id}
-                    className={`chat-message-row ${mine ? "user" : "friend"}`}
-                  >
-                    <div className={`chat-bubble ${mine ? "user" : "friend"}`}>
-                      <span className="chat-sender-name">{msg.senderName}</span>
-                      <p className="chat-msg-text">{msg.text}</p>
+            <div className="chat-friends-main">
+              {activeFriend ? (
+                <div className="chat-panel">
+                  <div className="chat-header-info">
+                    <div className="chat-header-left-pane">
+                      <div className="chat-status-dot online" />
+                      <div className="chat-header-text">
+                        <span className="chat-pet-name">{activeFriend.username}</span>
+                      </div>
                     </div>
                   </div>
-                );
-              })}
 
-              <div ref={realtimeEndRef} />
+                  <div className="chat-messages-container">
+                    {realtimeMessages.length === 0 && (
+                      <div className="chat-realtime-empty">
+                        No messages yet. Say hello to {activeFriend.username}!
+                      </div>
+                    )}
+
+                    {realtimeMessages.map((msg) => {
+                      const mine = msg.sender_id === userId;
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`chat-message-row ${mine ? "user" : "friend"}`}
+                        >
+                          <div className={`chat-bubble ${mine ? "user" : "friend"}`}>
+                            <p className="chat-msg-text">{msg.text}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div ref={realtimeEndRef} />
+                  </div>
+
+                  {error && (
+                    <div className="chat-feedback chat-error">
+                      <span className="chat-feedback-icon">!</span>
+                      {error}
+                    </div>
+                  )}
+
+                  <form className="chat-input-form" onSubmit={handleRealtimeSend}>
+                    <input
+                      type="text"
+                      className="chat-input-field"
+                      placeholder={`Message ${activeFriend.username}...`}
+                      value={realtimeInput}
+                      onChange={(e) => setRealtimeInput(e.target.value)}
+                      maxLength={500}
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className="chat-send-btn"
+                      disabled={!realtimeInput.trim()}
+                    >
+                      send
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div className="chat-friends-placeholder">
+                  <img src="/icons/paw.png" alt="" className="chat-placeholder-icon" />
+                  <p>select a friend to start chatting!</p>
+                </div>
+              )}
             </div>
-
-            {realtimeStatus !== "online" && (
-              <div className="chat-history-banner">
-                <span>Start the Socket.IO server to chat with other users.</span>
-              </div>
-            )}
-
-            <form className="chat-input-form" onSubmit={handleRealtimeSend}>
-              <input
-                type="text"
-                className="chat-input-field"
-                placeholder={
-                  realtimeStatus === "online"
-                    ? "Message everyone..."
-                    : "Waiting for chat server"
-                }
-                value={realtimeInput}
-                onChange={(e) => setRealtimeInput(e.target.value)}
-                maxLength={500}
-                disabled={realtimeStatus !== "online"}
-                required
-              />
-              <button
-                type="submit"
-                className="chat-send-btn"
-                disabled={realtimeStatus !== "online" || !realtimeInput.trim()}
-              >
-                send
-              </button>
-            </form>
           </div>
         )}
       </div>

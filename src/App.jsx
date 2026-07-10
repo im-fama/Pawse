@@ -6,6 +6,7 @@ import MoodCarouselScreen from "./screens/MoodCarouselScreen";
 import MessageScreen from "./screens/MessageScreen";
 import MoodLogScreen from "./screens/MoodLogScreen";
 import ChatScreen from "./screens/ChatScreen";
+import UsernameSetupScreen from "./screens/UsernameSetupScreen";
 import { fetchLatestMoodLog, daysSince } from "./logic/moodLogs";
 import { checkAndSendReminder } from "./logic/reminders";
 import { useAuth } from "./lib/useAuth";
@@ -22,11 +23,11 @@ export default function App() {
 
 function PawseRouter() {
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, hasProfile } = useAuth();
   const userId = user?.id ?? null;
   const [latestMoodLog, setLatestMoodLog] = useState(null);
   const [stateLoading, setStateLoading] = useState(true);
-
+  
   useEffect(() => {
     // Reset when there's no user
     if (authLoading || !userId) {
@@ -97,6 +98,11 @@ function PawseRouter() {
   // Not logged in → show Auth screen
   if (!user) {
     return <AuthScreen />;
+  }
+
+  // Logged in but profile is missing (e.g. after Google OAuth signup)
+  if (!hasProfile) {
+    return <UsernameSetupScreen />;
   }
 
   // Logged in but waiting for mood data

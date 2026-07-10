@@ -5,6 +5,8 @@ import { AuthContext } from "./AuthContextObject";
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -53,6 +55,61 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  // Fetch profiles whenever session changes
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setProfile(null);
+      return;
+    }
+
+    let active = true;
+    setProfileLoading(true);
+
+    async function loadProfile() {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, username, created_at")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (active) {
+          if (error) {
+            console.error("Error loading profile:", error.message);
+          } else {
+            setProfile(data);
+          }
+        }
+      } catch (err) {
+        console.error("Profile load err:", err);
+      } finally {
+        if (active) setProfileLoading(false);
+      }
+    }
+
+    loadProfile();
+
+    return () => {
+      active = false;
+    };
+  }, [session]);
+
+  async function refreshProfile() {
+    if (!session?.user?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, created_at")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if (!error && data) {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.error("Failed to refresh profile:", err);
+    }
+  }
+
   async function signIn(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -68,13 +125,11 @@ export function AuthProvider({ children }) {
       password,
       options: {
         data: {
-          username,
+          username: username.trim(),
         },
       },
     });
     if (error) throw error;
-    // Return data so the caller can check if a session was immediately created
-    // (happens when email confirmation is disabled in Supabase)
     return data;
   }
 
@@ -83,13 +138,27 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   }
 
+  async function signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+  }
+
   const value = {
     session,
     user: session?.user ?? null,
-    loading,
+    loading: loading || profileLoading,
+    profile,
+    refreshProfile,
+    hasProfile: Boolean(profile),
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

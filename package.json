@@ -5,12 +5,12 @@
   "type": "module",
   "main": "electron/main.js",
   "scripts": {
-    "dev": "concurrently -k -n VITE,CHAT -c blue,green \"vite\" \"node server/chatServer.js\"",
+    "dev": "vite",
     "chat:server": "node server/chatServer.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron:dev": "concurrently -k -n VITE,CHAT,ELECTRON -c blue,green,magenta \"cross-env VITE_PORT=5174 vite\" \"node server/chatServer.js\" \"wait-on tcp:5174 tcp:3001 && cross-env NODE_ENV=development VITE_PORT=5174 electron .\"",
+    "electron:dev": "concurrently -k -n VITE,ELECTRON -c blue,magenta \"cross-env VITE_PORT=5174 vite\" \"wait-on tcp:5174 && cross-env NODE_ENV=development VITE_PORT=5174 electron .\"",
     "electron:build": "vite build && electron-builder",
     "electron:build:mac": "vite build && electron-builder --mac",
     "electron:build:win": "vite build && electron-builder --win"

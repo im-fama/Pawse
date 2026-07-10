@@ -1,0 +1,152 @@
+/* ── layout ───────────────────────────────────────────────── */
+.username-setup-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
+  width: 100%;
+}
+
+.username-setup-greeting {
+  text-align: center;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: #F0DECA;
+  margin: 0;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
+/* ── card ─────────────────────────────────────────────────── */
+.username-setup-card {
+  gap: 14px;
+  padding: 16px;
+  justify-content: flex-start;
+  align-items: stretch;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.username-setup-title {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #33241C;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+/* ── form ─────────────────────────────────────────────────── */
+.username-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.username-setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.username-setup-label {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #33241C;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+.username-setup-input {
+  background: #F0DECA;
+  border: 2px solid #A9836C;
+  border-radius: 7px;
+  padding: 12px 14px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  color: #33241C;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+  display: block;
+}
+
+.username-setup-input::placeholder {
+  color: #A9836C;
+  opacity: 0.7;
+}
+
+.username-setup-input:focus {
+  outline: none;
+  border-color: #634636;
+}
+
+/* ── feedback messages ────────────────────────────────────── */
+.username-setup-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 13px;
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.4;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.username-setup-feedback-icon {
+  font-weight: 800;
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.username-setup-error {
+  background: rgba(139, 58, 42, 0.15);
+  border: 1.5px solid rgba(139, 58, 42, 0.35);
+  color: #8b3a2a;
+}
+
+/* ── action buttons ───────────────────────────────────────── */
+.username-setup-submit-btn {
+  width: 100%;
+  background: #634636;
+  color: #F0DECA;
+  border: 3px solid #33241C;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+  cursor: pointer;
+  margin-top: auto;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.username-setup-submit-btn:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.username-setup-submit-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.username-setup-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
