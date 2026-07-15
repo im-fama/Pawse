@@ -4,7 +4,7 @@ import PetImage from "../components/PetImage";
 import PawseWindow from "../components/PawseWindow";
 import { getMoodById } from "../data/moods";
 import { fetchMoodHistory } from "../logic/moodLogs";
-import "./MoodLogScreen.css";
+import "../styles/MoodLogScreen.css";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
@@ -138,7 +138,7 @@ export default function MoodLogScreen({ userId }) {
   }, [popup, notePopup]);
 
   useLayoutEffect(() => {
-    if (view !== "weekly" || loading) return;
+    if (view !== "weekly" || loading || searchQuery) return;
 
     const container = scrollContainerRef.current;
     const currentWeek = currentWeekRef.current;
@@ -149,7 +149,7 @@ export default function MoodLogScreen({ userId }) {
         scrollToElement(container, currentWeek);
       });
     });
-  }, [view, loading, entries]);
+  }, [view, loading, entries, searchQuery]);
 
   const getMonthlyDays = () => {
     const year = currentDate.getFullYear();
@@ -211,7 +211,7 @@ export default function MoodLogScreen({ userId }) {
   const searchResults = useMemo(() => {
     if (!trimmedQuery) return [];
     return entries.filter((entry) => {
-      const mood = getMoodById(entry.mood);
+      const mood = getMoodById(entry.mood, userId);
       const moodLabel = mood?.label?.toLowerCase() || "";
       const note = (entry.note || "").toLowerCase();
       const dateStr = new Date(entry.created_at).toLocaleDateString(undefined, {
@@ -259,36 +259,6 @@ export default function MoodLogScreen({ userId }) {
             </div>
           </div>
           <div className="moodlog-search-bar-container">
-            <div className="moodlog-filter-bar">
-              <button
-                type="button"
-                className={`moodlog-filter-btn ${searchFilter === "all" ? "active" : ""}`}
-                onClick={() => setSearchFilter("all")}
-              >
-                all
-              </button>
-              <button
-                type="button"
-                className={`moodlog-filter-btn ${searchFilter === "mood" ? "active" : ""}`}
-                onClick={() => setSearchFilter("mood")}
-              >
-                mood
-              </button>
-              <button
-                type="button"
-                className={`moodlog-filter-btn ${searchFilter === "note" ? "active" : ""}`}
-                onClick={() => setSearchFilter("note")}
-              >
-                note
-              </button>
-              <button
-                type="button"
-                className={`moodlog-filter-btn ${searchFilter === "date" ? "active" : ""}`}
-                onClick={() => setSearchFilter("date")}
-              >
-                date
-              </button>
-            </div>
             <div className="moodlog-search-wrap">
               <input
                 id="moodlog-search"
@@ -311,6 +281,17 @@ export default function MoodLogScreen({ userId }) {
                 </button>
               )}
             </div>
+            <select
+              className="moodlog-filter-select"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              aria-label="Search filter type"
+            >
+              <option value="all">all</option>
+              <option value="mood">mood</option>
+              <option value="note">note</option>
+              <option value="date">date</option>
+            </select>
           </div>
         </div>
 
@@ -326,7 +307,7 @@ export default function MoodLogScreen({ userId }) {
             ) : (
               <div className="moodlog-search-results">
                 {searchResults.map((entry) => {
-                  const mood = getMoodById(entry.mood);
+                  const mood = getMoodById(entry.mood, userId);
                   const entryDate = new Date(entry.created_at);
                   return (
                     <button
@@ -375,7 +356,7 @@ export default function MoodLogScreen({ userId }) {
                     <div className="moodlog-week-days">
                       {week.days.map((day) => {
                         const entry = getEntryForDay(day);
-                        const mood = entry ? getMoodById(entry.mood) : null;
+                        const mood = entry ? getMoodById(entry.mood, userId) : null;
                         const isToday = day.toDateString() === new Date().toDateString();
                         const isFuture = day.getTime() > todayStart.getTime();
 
@@ -437,7 +418,7 @@ export default function MoodLogScreen({ userId }) {
                     if (!day) return <div className="calendar-cell empty" key={`empty-${idx}`} />;
 
                     const entry = getEntryForDay(day);
-                    const mood = entry ? getMoodById(entry.mood) : null;
+                    const mood = entry ? getMoodById(entry.mood, userId) : null;
                     const isToday = day.toDateString() === new Date().toDateString();
                     const cellKey = day.toISOString();
                     const isHovered = hoveredDay === cellKey;
@@ -493,9 +474,9 @@ export default function MoodLogScreen({ userId }) {
               &times;
             </button>
             <span className="mood-popup-date">{formatPopupDate(popup.date)}</span>
-            <PetImage mood={getMoodById(popup.entry.mood)} className="mood-popup-img" />
+            <PetImage mood={getMoodById(popup.entry.mood, userId)} className="mood-popup-img" />
             <span className="mood-popup-label">
-              {getMoodById(popup.entry.mood)?.label.toLowerCase()}
+              {getMoodById(popup.entry.mood, userId)?.label.toLowerCase()}
             </span>
             {popup.entry.note ? (
               <button

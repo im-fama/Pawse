@@ -70,3 +70,54 @@ export async function sendChatMessage(history, message, todayMood, apiKey) {
 
   return replyText.trim();
 }
+
+export async function generateSupportMessage(moodLabel, apiKey) {
+  const keyToUse = apiKey || import.meta.env.VITE_GROQ_API_KEY;
+  if (!keyToUse) {
+    throw new Error("Missing Groq API key.");
+  }
+
+  const prompt = `You are a compassionate and supportive assistant.
+
+The user will provide their current mood (e.g., sad, anxious, happy, tired, lonely, stressed).
+
+Your task is to generate a short, comforting message tailored to that mood.
+
+Guidelines:
+- Be empathetic, warm, and human-like (not robotic)
+- Keep it extremely short (strictly 1 to 2 short sentences, maximum 25-30 words total)
+- Do NOT give clinical or medical advice
+- Do NOT sound overly generic
+- Use gentle encouragement when appropriate
+- Match the tone to the mood (e.g., softer for sadness, uplifting for stress)
+
+Mood: ${moodLabel}
+
+Support Message:`;
+
+  const response = await fetch(GROQ_CHAT_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${keyToUse}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: import.meta.env.VITE_GROQ_MODEL || DEFAULT_GROQ_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      max_completion_tokens: 65,
+      temperature: 0.75,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Groq API error ${response.status}`);
+  }
+
+  const result = await response.json();
+  const replyText = result?.choices?.[0]?.message?.content;
+  if (!replyText) {
+    throw new Error("Empty response received from Groq.");
+  }
+
+  return replyText.trim();
+}

@@ -10,7 +10,29 @@
   padding: 14px 12px;
   box-sizing: border-box;
   width: 100%;
-  flex-shrink: 0;
+  max-height: 195px;
+  overflow-y: auto;
+  flex-shrink: 1;
+}
+
+/* Retro styling for the message bubble scrollbar */
+.message-bubble-custom::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-bubble-custom::-webkit-scrollbar-track {
+  background: #33241C;
+  border-radius: 4px;
+}
+
+.message-bubble-custom::-webkit-scrollbar-thumb {
+  background: #A9836C;
+  border: 1px solid #33241C;
+  border-radius: 4px;
+}
+
+.message-bubble-custom::-webkit-scrollbar-thumb:hover {
+  background: #E4C6AC;
 }
 
 .message-text-custom {

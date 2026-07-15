@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PawseWindow from "../components/PawseWindow";
-import "./HomeScreen.css";
+import "../styles/HomeScreen.css";
 
 export default function HomeScreen({ daysApart = 0 }) {
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PawseWindow from "../components/PawseWindow";
 import PetImage from "../components/PetImage";
@@ -11,10 +11,18 @@ import {
   fetchPrivateMessages,
   subscribeToPrivateMessages,
 } from "../logic/privateMessages";
-import "./ChatScreen.css";
+import "../styles/ChatScreen.css";
 
-// Read the Groq API key directly from environment
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
+
+// Emoji categories for the picker
+const EMOJI_GROUPS = [
+  ["😊","😂","🥹","😍","🥰","😎","🤩","😅","😭","😢","😤","😠","😡","🤯","😱","😴","🥱","😶","🤔","😬"],
+  ["❤️","🧡","💛","💚","💙","💜","🖤","🩷","🩵","🤍","💔","💯","✨","🔥","⭐","🌟","💫","🎉","🎊","🎁"],
+  ["👋","🤝","👍","👎","❤️","🫂","🙌","👏","🤞","🫶","🙏","💪","🫀","🦋","🐾","🐱","🐶","🐻","🐼","🌸"],
+  ["😋","🍕","🍔","🍟","🌮","🍜","🍣","🍰","🧁","🍩","☕","🧃","🥤","🍵","🎂","🍓","🍇","🍉","🍒","🥝"],
+  ["🚀","🌈","🌙","⭐","🌺","🌻","🌊","🏔️","🌿","🍀","🌼","🦄","🦋","🌈","❄️","⚡","🌍","🎵","🎶","🎸"],
+];
 
 function getTodayDateString() {
   const today = new Date();
@@ -44,6 +52,7 @@ export default function ChatScreen({ userId }) {
   const location = useLocation();
   const messagesEndRef = useRef(null);
   const realtimeEndRef = useRef(null);
+  const realtimeInputRef = useRef(null);
 
   const [chatMode, setChatMode] = useState(location.state?.mode || "ai");
 
@@ -63,6 +72,24 @@ export default function ChatScreen({ userId }) {
   const [activeFriend, setActiveFriend] = useState(null);
   const [realtimeMessages, setRealtimeMessages] = useState([]);
   const [realtimeInput, setRealtimeInput] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Emoji picker state
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiTab, setEmojiTab] = useState(0);
+  const emojiPickerRef = useRef(null);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    function handleClick(e) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target)) {
+        setShowEmojiPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showEmojiPicker]);
 
   // Fetch all users/friends
   useEffect(() => {
@@ -115,7 +142,7 @@ export default function ChatScreen({ userId }) {
             date.getMonth() === today.getMonth() &&
             date.getFullYear() === today.getFullYear();
           if (isToday) {
-            loggedMood = getMoodById(latest.mood);
+            loggedMood = getMoodById(latest.mood, userId);
           }
         }
 
@@ -255,24 +282,45 @@ export default function ChatScreen({ userId }) {
     }
   }
 
+  // Optimistic send — message appears instantly, server insert happens in background
   async function handleRealtimeSend(e) {
     e.preventDefault();
     const text = realtimeInput.trim();
     if (!text || !activeFriend?.id || !userId) return;
 
     setError("");
+    setRealtimeInput("");
+    setShowEmojiPicker(false);
+
+    // Optimistic message (no real id yet)
+    const optimisticId = `optimistic-${Date.now()}`;
+    const optimisticMsg = {
+      id: optimisticId,
+      sender_id: userId,
+      recipient_id: activeFriend.id,
+      text,
+      created_at: new Date().toISOString(),
+    };
+    setRealtimeMessages((prev) => [...prev, optimisticMsg]);
+
     try {
-      const newMsg = await sendPrivateMessage(userId, activeFriend.id, text);
-      setRealtimeMessages((prev) => {
-        if (prev.some((m) => m.id === newMsg.id)) return prev;
-        return [...prev, newMsg];
-      });
-      setRealtimeInput("");
+      const savedMsg = await sendPrivateMessage(userId, activeFriend.id, text);
+      // Replace the optimistic entry with the real one (has real id)
+      setRealtimeMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? savedMsg : m))
+      );
     } catch (err) {
       console.error(err);
+      // Remove optimistic message on failure
+      setRealtimeMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       setError("Failed to send message. Try again?");
     }
   }
+
+  const insertEmoji = useCallback((emoji) => {
+    setRealtimeInput((prev) => prev + emoji);
+    realtimeInputRef.current?.focus();
+  }, []);
 
   const isToday = selectedDate === getTodayDateString();
   const activeMood = todayMood || { id: "calm", label: "Calm", image: "calm.png" };
@@ -295,7 +343,7 @@ export default function ChatScreen({ userId }) {
             className={`chat-toggle-btn ${chatMode === "realtime" ? "active" : ""}`}
             onClick={() => setChatMode("realtime")}
           >
-            chat with friends
+            friends
           </button>
         </div>
 
@@ -415,29 +463,41 @@ export default function ChatScreen({ userId }) {
           </div>
         ) : (
           <div className="chat-friends-layout">
-            <div className="chat-friends-sidebar">
-              <h3 className="chat-sidebar-title">friends</h3>
-              <div className="chat-friends-list">
-                {friends.length === 0 ? (
-                  <div className="chat-friends-empty">no users found</div>
-                ) : (
-                  friends.map((friend) => (
-                    <button
-                      key={friend.id}
-                      type="button"
-                      className={`chat-friend-item ${
-                        activeFriend?.id === friend.id ? "active" : ""
-                      }`}
-                      onClick={() => {
-                        setActiveFriend(friend);
-                        setError("");
-                      }}
-                    >
-                      <span className="chat-friend-name">{friend.username}</span>
-                    </button>
-                  ))
-                )}
+            {/* Sidebar */}
+            <div className={`chat-friends-sidebar ${sidebarOpen ? "open" : "collapsed"}`}>
+              <div className="chat-sidebar-header">
+                {sidebarOpen && <h3 className="chat-sidebar-title">friends</h3>}
+                <button
+                  type="button"
+                  className="chat-sidebar-toggle"
+                  onClick={() => setSidebarOpen((o) => !o)}
+                  aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                  title={sidebarOpen ? "Hide friends" : "Show friends"}
+                >
+                  {sidebarOpen ? "‹" : "›"}
+                </button>
               </div>
+              {sidebarOpen && (
+                <div className="chat-friends-list">
+                  {friends.length === 0 ? (
+                    <div className="chat-friends-empty">no users found</div>
+                  ) : (
+                    friends.map((friend) => (
+                      <button
+                        key={friend.id}
+                        type="button"
+                        className={`chat-friend-item ${activeFriend?.id === friend.id ? "active" : ""}`}
+                        onClick={() => {
+                          setActiveFriend(friend);
+                          setError("");
+                        }}
+                      >
+                        <span className="chat-friend-name">{friend.username}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="chat-friends-main">
@@ -461,12 +521,13 @@ export default function ChatScreen({ userId }) {
 
                     {realtimeMessages.map((msg) => {
                       const mine = msg.sender_id === userId;
+                      const isOptimistic = String(msg.id).startsWith("optimistic-");
                       return (
                         <div
                           key={msg.id}
                           className={`chat-message-row ${mine ? "user" : "friend"}`}
                         >
-                          <div className={`chat-bubble ${mine ? "user" : "friend"}`}>
+                          <div className={`chat-bubble ${mine ? "user" : "friend"} ${isOptimistic ? "optimistic" : ""}`}>
                             <p className="chat-msg-text">{msg.text}</p>
                           </div>
                         </div>
@@ -485,6 +546,7 @@ export default function ChatScreen({ userId }) {
 
                   <form className="chat-input-form" onSubmit={handleRealtimeSend}>
                     <input
+                      ref={realtimeInputRef}
                       type="text"
                       className="chat-input-field"
                       placeholder={`Message ${activeFriend.username}...`}

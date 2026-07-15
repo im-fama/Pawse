@@ -8,6 +8,7 @@
 // broken image.
 //
 // Array order is also carousel order.
+import { getCustomMoods } from "../lib/customMoods";
 
 export const MOODS = [
   {
@@ -208,6 +209,12 @@ export const MOODS = [
   },
 ];
 
-export function getMoodById(id) {
-  return MOODS.find((m) => m.id === id) ?? null;
+export function getMoodById(id, userId) {
+  const builtIn = MOODS.find((m) => m.id === id);
+  if (builtIn) return builtIn;
+  if (userId) {
+    const custom = getCustomMoods(userId).find((m) => m.id === id);
+    if (custom) return custom;
+  }
+  return null;
 }

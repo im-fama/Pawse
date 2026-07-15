@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { AuthContext } from "./AuthContextObject";
+import { rememberAccount } from "./savedAccounts";
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -20,15 +21,10 @@ export function AuthProvider({ children }) {
         if (!mounted) return;
 
         if (existingSession) {
-          try {
-            await supabase.auth.signOut({ scope: "global" });
-          } catch (signOutError) {
-            console.warn("Failed to clear existing session:", signOutError);
-          }
+          setSession(existingSession);
         }
 
         if (mounted) {
-          setSession(null);
           setLoading(false);
         }
       } catch (err) {
@@ -55,7 +51,7 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Fetch profiles whenever session changes
+  // Fetch profile whenever session changes
   useEffect(() => {
     if (!session?.user?.id) {
       setProfile(null);
@@ -68,7 +64,7 @@ export function AuthProvider({ children }) {
     async function loadProfile() {
       try {
         const { data, error } = await supabase
-          .from("profiles")
+          .from("users")
           .select("id, username, created_at")
           .eq("id", session.user.id)
           .maybeSingle();
@@ -78,6 +74,13 @@ export function AuthProvider({ children }) {
             console.error("Error loading profile:", error.message);
           } else {
             setProfile(data);
+            if (data?.username && session.user.email) {
+              rememberAccount({
+                id: session.user.id,
+                email: session.user.email,
+                username: data.username,
+              });
+            }
           }
         }
       } catch (err) {
@@ -98,7 +101,7 @@ export function AuthProvider({ children }) {
     if (!session?.user?.id) return;
     try {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("users")
         .select("id, username, created_at")
         .eq("id", session.user.id)
         .maybeSingle();
@@ -117,6 +120,24 @@ export function AuthProvider({ children }) {
     });
     if (error) throw error;
     return data;
+  }
+
+  // Sign in with username — looks up the email via the get_email_for_username
+  // RPC (a security-definer function), since RLS only lets a signed-in user
+  // read their own row from public.users and we're not signed in yet here.
+  async function signInWithUsername(username, password) {
+    const trimmed = username.trim();
+    if (!trimmed) throw new Error("Username is required.");
+
+    const { data: email, error } = await supabase.rpc("get_email_for_username", {
+      lookup_username: trimmed,
+    });
+
+    if (error || !email) {
+      throw new Error("No account found with that username.");
+    }
+
+    return signIn(email, password);
   }
 
   async function signUp(email, password, username) {
@@ -138,16 +159,6 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   }
 
-  async function signInWithGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-    if (error) throw error;
-  }
-
   const value = {
     session,
     user: session?.user ?? null,
@@ -156,9 +167,9 @@ export function AuthProvider({ children }) {
     refreshProfile,
     hasProfile: Boolean(profile),
     signIn,
+    signInWithUsername,
     signUp,
     signOut,
-    signInWithGoogle,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

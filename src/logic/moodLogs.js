@@ -55,8 +55,20 @@ export async function logMood(userId, moodId) {
     throw new Error("You must be signed in to log a mood.");
   }
 
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const startOfTodayISO = startOfToday.toISOString();
+
+  // 1. Try local storage check for fallback / consistency
+  const localLogs = readLocalLogs(userId);
+  const existingLocalIndex = localLogs.findIndex(
+    (entry) => new Date(entry.created_at).getTime() >= startOfToday.getTime()
+  );
+
   const fallbackLog = {
-    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: existingLocalIndex !== -1 
+      ? localLogs[existingLocalIndex].id 
+      : `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     user_id: userId,
     mood: moodId,
     note: null,
@@ -64,20 +76,53 @@ export async function logMood(userId, moodId) {
   };
 
   if (!isSupabaseConfigured) {
-    cacheLogAtFront(userId, fallbackLog);
+    if (existingLocalIndex !== -1) {
+      localLogs[existingLocalIndex] = fallbackLog;
+      writeLocalLogs(userId, localLogs);
+    } else {
+      cacheLogAtFront(userId, fallbackLog);
+    }
     return fallbackLog;
   }
 
   try {
-    const { data, error } = await withTimeout(
-      supabase
-        .from("mood_logs")
-        .insert({ user_id: userId, mood: moodId })
-        .select("id, mood, note, created_at")
-        .single()
-    );
+    // Check if there is an existing log in database for today
+    const { data: existingLogs, error: fetchError } = await supabase
+      .from("mood_logs")
+      .select("id, mood, note, created_at")
+      .eq("user_id", userId)
+      .gte("created_at", startOfTodayISO)
+      .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (fetchError) throw fetchError;
+
+    let data;
+    if (existingLogs && existingLogs.length > 0) {
+      // Override the existing log (clearing the note)
+      const existingLog = existingLogs[0];
+      const { data: updatedData, error: updateError } = await withTimeout(
+        supabase
+          .from("mood_logs")
+          .update({ mood: moodId, note: null, created_at: new Date().toISOString() })
+          .eq("id", existingLog.id)
+          .select("id, mood, note, created_at")
+          .single()
+      );
+      if (updateError) throw updateError;
+      data = updatedData;
+    } else {
+      // Create new log
+      const { data: insertedData, error: insertError } = await withTimeout(
+        supabase
+          .from("mood_logs")
+          .insert({ user_id: userId, mood: moodId })
+          .select("id, mood, note, created_at")
+          .single()
+      );
+      if (insertError) throw insertError;
+      data = insertedData;
+    }
+
     if (!data) throw new Error("No data returned after saving mood.");
 
     try {
@@ -95,10 +140,11 @@ export async function logMood(userId, moodId) {
     return data;
   } catch (err) {
     console.warn("Falling back to local mood log storage:", err);
-    try {
+    if (existingLocalIndex !== -1) {
+      localLogs[existingLocalIndex] = fallbackLog;
+      writeLocalLogs(userId, localLogs);
+    } else {
       cacheLogAtFront(userId, fallbackLog);
-    } catch (e) {
-      console.error("Local storage write error:", e);
     }
 
     try {
@@ -110,6 +156,7 @@ export async function logMood(userId, moodId) {
     return fallbackLog;
   }
 }
+
 
 export async function fetchLatestMoodLog(userId) {
   if (!userId) return null;

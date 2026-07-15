@@ -3,23 +3,48 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import PawseWindow from "../components/PawseWindow";
 import PetImage from "../components/PetImage";
 import { getMoodById } from "../data/moods";
-import { getSupportMessage } from "../data/supportMessages";
+import { FALLBACK_SUPPORT_MESSAGE } from "../data/supportMessages";
+import { generateSupportMessage } from "../logic/groq";
 import { deleteMoodLogNote, fetchMoodLogById, updateMoodLogNote } from "../logic/moodLogs";
-import "./MessageScreen.css";
+import "../styles/MessageScreen.css";
 
 export default function MessageScreen({ userId }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { moodId } = useParams();
-  const mood = getMoodById(moodId) || getMoodById("happy");
-  const logId = location.state?.logId;
+  const mood = getMoodById(moodId, userId) || getMoodById("happy"); const logId = location.state?.logId;
 
-  const [message] = useState(() => getSupportMessage(mood.id));
+  const [message, setMessage] = useState("");
+  const [loadingMessage, setLoadingMessage] = useState(true);
   const [note, setNote] = useState("");
   const [savedNote, setSavedNote] = useState("");
   const [hasNote, setHasNote] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSupportMessage() {
+      try {
+        setLoadingMessage(true);
+        const aiMessage = await generateSupportMessage(mood.label.toLowerCase());
+        if (!cancelled) {
+          setMessage(aiMessage);
+          setLoadingMessage(false);
+        }
+      } catch (err) {
+        console.warn("AI support message generation failed, falling back:", err);
+        if (!cancelled) {
+        setMessage(FALLBACK_SUPPORT_MESSAGE);
+          setLoadingMessage(false);
+        }
+      }
+    }
+    loadSupportMessage();
+    return () => {
+      cancelled = true;
+    };
+  }, [mood]);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,11 +138,12 @@ export default function MessageScreen({ userId }) {
     <PawseWindow
       title="mood log"
       onTitleClick={() => navigate("/mood-log")}
-      onBack={() => navigate("/carousel")}
     >
       <div className="pawse-inner-card message-inner-card">
         <div className="message-bubble-custom">
-          <p className="message-text-custom">{message}</p>
+          <p className="message-text-custom">
+            {loadingMessage ? "generating comforting message..." : message}
+          </p>
         </div>
 
         <div className="message-note-section">
@@ -174,19 +200,6 @@ export default function MessageScreen({ userId }) {
             <p className="message-note-status">{statusMessage}</p>
           )}
         </div>
-
-        <div
-          className="message-pet-frame-custom"
-          onClick={() => navigate("/home")}
-        >
-          <PetImage
-            mood={mood}
-            alt={`${mood.label} kitty`}
-            className="message-pet-image-custom"
-          />
-        </div>
-
-        <p className="message-hint-click">tap kitty to go home</p>
       </div>
     </PawseWindow>
   );

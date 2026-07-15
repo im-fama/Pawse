@@ -6,7 +6,6 @@ import MoodCarouselScreen from "./screens/MoodCarouselScreen";
 import MessageScreen from "./screens/MessageScreen";
 import MoodLogScreen from "./screens/MoodLogScreen";
 import ChatScreen from "./screens/ChatScreen";
-import UsernameSetupScreen from "./screens/UsernameSetupScreen";
 import { fetchLatestMoodLog, daysSince } from "./logic/moodLogs";
 import { checkAndSendReminder } from "./logic/reminders";
 import { useAuth } from "./lib/useAuth";
@@ -95,14 +94,10 @@ function PawseRouter() {
     );
   }
 
-  // Not logged in → show Auth screen
-  if (!user) {
+ // Not logged in, or logged in but profile is missing (e.g. after
+  // Google OAuth signup) → AuthScreen handles both cases itself.
+  if (!user || !hasProfile) {
     return <AuthScreen />;
-  }
-
-  // Logged in but profile is missing (e.g. after Google OAuth signup)
-  if (!hasProfile) {
-    return <UsernameSetupScreen />;
   }
 
   // Logged in but waiting for mood data

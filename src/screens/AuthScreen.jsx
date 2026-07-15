@@ -2,14 +2,26 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PawseWindow from "../components/PawseWindow";
 import { useAuth } from "../lib/useAuth";
-import "./AuthScreen.css";
+import { setUsername as setUsernameOnAccount } from "../lib/profiles";
+import { getSavedAccounts, removeSavedAccount } from "../lib/savedAccounts";
+import "../styles/AuthScreen.css";
+
+function suggestUsernameFromEmail(email) {
+  const local = email.split("@")[0] || "";
+  return local.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20);
+}
 
 export default function AuthScreen() {
   const navigate = useNavigate();
-  const { signIn, signUp, signInWithGoogle } = useAuth();
-  const [mode, setMode] = useState("login");
+  const { user, hasProfile, signIn, signInWithUsername, signUp, refreshProfile } = useAuth();
+
+  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [loginMethod, setLoginMethod] = useState("email"); // "email" | "username"
+
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [usernameLogin, setUsernameLogin] = useState(""); // username for login
+  const [username, setUsername] = useState(""); // username for signup
+  const [usernameTouched, setUsernameTouched] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,16 +30,70 @@ export default function AuthScreen() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  const [savedAccounts, setSavedAccounts] = useState(() => getSavedAccounts());
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+  function selectAccount(account) {
+    setSelectedAccount(account);
+    setError("");
+    setMessage("");
+    setPassword("");
+    setShowPassword(false);
+  }
+
+  function useAnotherAccount() {
+    setSelectedAccount(null);
+    setError("");
+    setPassword("");
+  }
+
+  function handleRemoveSavedAccount(event, email) {
+    event.stopPropagation();
+    removeSavedAccount(email);
+    setSavedAccounts(getSavedAccounts());
+    if (selectedAccount?.email === email) {
+      setSelectedAccount(null);
+    }
+  }
+
+  async function handleSavedAccountSubmit(event) {
+    event.preventDefault();
+    if (submitting || !selectedAccount) return;
+
+    setError("");
+    setSubmitting(true);
+    try {
+      await signIn(selectedAccount.email, password);
+      navigate("/home", { replace: true });
+    } catch (err) {
+      setError(err.message || "Something went wrong. Try again?");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function switchMode(newMode) {
     setMode(newMode);
     setError("");
     setMessage("");
     setEmail("");
+    setUsernameLogin("");
     setUsername("");
+    setUsernameTouched(false);
     setPassword("");
     setConfirmPassword("");
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setSelectedAccount(null);
+  }
+
+  function switchLoginMethod(method) {
+    setLoginMethod(method);
+    setError("");
+    setEmail("");
+    setUsernameLogin("");
+    setPassword("");
+    setShowPassword(false);
   }
 
   async function handleSubmit(event) {
@@ -56,7 +122,11 @@ export default function AuthScreen() {
 
     try {
       if (mode === "login") {
-        await signIn(email.trim(), password);
+        if (loginMethod === "username") {
+          await signInWithUsername(usernameLogin.trim(), password);
+        } else {
+          await signIn(email.trim(), password);
+        }
         navigate("/home", { replace: true });
       } else {
         const result = await signUp(email.trim(), password, username.trim());
@@ -74,17 +144,161 @@ export default function AuthScreen() {
     }
   }
 
-  async function handleGoogleSignIn() {
+  // Logged in (e.g. via Google) but no username yet.
+  async function handleUsernameSetup(event) {
+    event.preventDefault();
     if (submitting) return;
+    const cleanUsername = username.trim();
+    if (!cleanUsername) {
+      setError("Username is required.");
+      return;
+    }
+
     setError("");
     setSubmitting(true);
     try {
-      await signInWithGoogle();
-      // Supabase will redirect, so no navigate needed here
+      await setUsernameOnAccount(user.id, cleanUsername);
+      await refreshProfile();
     } catch (err) {
-      setError(err.message || "Google sign-in failed. Try again?");
+      setError(
+        err.message?.includes("unique") || err.message?.includes("duplicate")
+          ? "Username is already taken. Try another?"
+          : err.message || "Failed to set username. Try again?"
+      );
+    } finally {
       setSubmitting(false);
     }
+  }
+
+  if (user && !hasProfile) {
+    return (
+      <PawseWindow hideHomeBtn hideSignOutBtn>
+        <div className="auth-layout">
+          <p className="auth-greeting">almost there!</p>
+
+          <div className="pawse-inner-card auth-card">
+            <h2 className="auth-mode-title">choose a username</h2>
+
+            <form className="auth-form" onSubmit={handleUsernameSetup} noValidate>
+              <div className="auth-fields">
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="setup-username">
+                    username
+                  </label>
+                  <input
+                    id="setup-username"
+                    className="auth-input"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="choose a name"
+                    maxLength={20}
+                    required
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="auth-feedback auth-error">
+                  <span className="auth-feedback-icon">!</span>
+                  {error}
+                </div>
+              )}
+
+              <div className="auth-actions">
+                <button
+                  type="submit"
+                  className="auth-submit-btn"
+                  disabled={submitting || !username.trim()}
+                >
+                  {submitting ? "..." : "let's go!"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </PawseWindow>
+    );
+  }
+
+  if (mode === "login" && selectedAccount) {
+    return (
+      <PawseWindow title="Pawse" icon="🐾">
+        <div className="auth-layout">
+          <p className="auth-greeting">welcome back!</p>
+
+          <div className="pawse-inner-card auth-card">
+            <h2 className="auth-mode-title">log in</h2>
+
+            <div className="saved-account-active">
+              <div className="saved-account-avatar">
+                {selectedAccount.username?.[0]?.toUpperCase() || "?"}
+              </div>
+              <div className="saved-account-active-info">
+                <span className="saved-account-active-name">
+                  {selectedAccount.username || selectedAccount.email}
+                </span>
+                <button
+                  type="button"
+                  className="saved-account-switch-btn"
+                  onClick={useAnotherAccount}
+                >
+                  not you? use another account
+                </button>
+              </div>
+            </div>
+
+            <form className="auth-form" onSubmit={handleSavedAccountSubmit} noValidate>
+              <div className="auth-fields">
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="saved-account-password">
+                    password
+                  </label>
+                  <div className="auth-input-wrap">
+                    <input
+                      id="saved-account-password"
+                      className="auth-input"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      placeholder="••••••"
+                      autoFocus
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="auth-eye-btn"
+                      onClick={() => setShowPassword((value) => !value)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      <img
+                        src={showPassword ? "/icons/close_eye.png" : "/icons/open_eye.png"}
+                        alt=""
+                        className="auth-eye-icon"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="auth-feedback auth-error">
+                  <span className="auth-feedback-icon">!</span>
+                  {error}
+                </div>
+              )}
+
+              <div className="auth-actions">
+                <button type="submit" className="auth-submit-btn" disabled={submitting}>
+                  {submitting ? "..." : "log in"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </PawseWindow>
+    );
   }
 
   return (
@@ -96,6 +310,61 @@ export default function AuthScreen() {
           <h2 className="auth-mode-title">
             {mode === "login" ? "log in" : "sign up"}
           </h2>
+
+          {/* Saved accounts — pick one to skip straight to the password field */}
+          {mode === "login" && savedAccounts.length > 0 && (
+            <div className="saved-accounts-list">
+              {savedAccounts.map((account) => (
+                <button
+                  type="button"
+                  key={account.email}
+                  className="saved-account-row"
+                  onClick={() => selectAccount(account)}
+                >
+                  <span className="saved-account-avatar">
+                    {account.username?.[0]?.toUpperCase() || "?"}
+                  </span>
+                  <span className="saved-account-name">
+                    {account.username || account.email}
+                  </span>
+                  <span
+                    className="saved-account-remove-btn"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Remove ${account.username || account.email}`}
+                    onClick={(e) => handleRemoveSavedAccount(e, account.email)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleRemoveSavedAccount(e, account.email);
+                      }
+                    }}
+                  >
+                    ×
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Login method toggle — only shown on login screen */}
+          {mode === "login" && (
+            <div className="auth-method-toggle">
+              <button
+                type="button"
+                className={`auth-method-btn ${loginMethod === "email" ? "active" : ""}`}
+                onClick={() => switchLoginMethod("email")}
+              >
+                email
+              </button>
+              <button
+                type="button"
+                className={`auth-method-btn ${loginMethod === "username" ? "active" : ""}`}
+                onClick={() => switchLoginMethod("username")}
+              >
+                username
+              </button>
+            </div>
+          )}
 
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
             <div className="auth-fields">
@@ -109,28 +378,56 @@ export default function AuthScreen() {
                     className="auth-input"
                     type="text"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      setUsernameTouched(e.target.value.trim().length > 0);
+                    }}
                     placeholder="kitty_friend"
                     required
                   />
                 </div>
               )}
 
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="auth-email">
-                  email
-                </label>
-                <input
-                  id="auth-email"
-                  className="auth-input"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  placeholder="kitty@pawse.app"
-                  required
-                />
-              </div>
+              {/* Email OR username login field */}
+              {mode === "login" && loginMethod === "username" ? (
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="auth-username-login">
+                    username
+                  </label>
+                  <input
+                    id="auth-username-login"
+                    className="auth-input"
+                    type="text"
+                    value={usernameLogin}
+                    onChange={(e) => setUsernameLogin(e.target.value)}
+                    autoComplete="username"
+                    placeholder="kitty_friend"
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="auth-email">
+                    email
+                  </label>
+                  <input
+                    id="auth-email"
+                    className="auth-input"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEmail(value);
+                      if (mode === "signup" && !usernameTouched) {
+                        setUsername(suggestUsernameFromEmail(value));
+                      }
+                    }}
+                    autoComplete="email"
+                    placeholder="kitty@pawse.app"
+                    required
+                  />
+                </div>
+              )}
 
               <div className="auth-field">
                 <label className="auth-label" htmlFor="auth-password">
@@ -241,28 +538,6 @@ export default function AuthScreen() {
                   log in
                 </button>
               )}
-
-              <div className="auth-divider">
-                <span className="auth-divider-line" />
-                <span className="auth-divider-text">or</span>
-                <span className="auth-divider-line" />
-              </div>
-
-              <button
-                id="auth-google-btn"
-                type="button"
-                className="auth-google-btn"
-                onClick={handleGoogleSignIn}
-                disabled={submitting}
-              >
-                <svg className="auth-google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                sign in with google
-              </button>
             </div>
           </form>
         </div>

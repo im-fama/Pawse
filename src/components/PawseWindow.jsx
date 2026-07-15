@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { onCloseMouseDown } from "../lib/windowControls";
 import { AuthContext } from "../lib/AuthContextObject";
-import "./PawseWindow.css";
+import "../styles/PawseWindow.css";
 
 export default function PawseWindow({
   children,
@@ -38,18 +38,24 @@ export default function PawseWindow({
             <>
               <button
                 type="button"
-                className={`pawse-titlebar-btn titlebar-nav-btn ${
-                  location.pathname === "/mood-log" ? "active" : ""
-                }`}
-                onClick={() => navigate("/mood-log")}
+                className={`pawse-titlebar-btn titlebar-nav-btn ${location.pathname === "/carousel" ? "active" : ""
+                  }`}
+                onClick={() => navigate("/carousel")}
               >
-                mood log
+                mood
               </button>
               <button
                 type="button"
-                className={`pawse-titlebar-btn titlebar-nav-btn ${
-                  location.pathname === "/chat" ? "active" : ""
-                }`}
+                className={`pawse-titlebar-btn titlebar-nav-btn ${location.pathname === "/mood-log" ? "active" : ""
+                  }`}
+                onClick={() => navigate("/mood-log")}
+              >
+                history
+              </button>
+              <button
+                type="button"
+                className={`pawse-titlebar-btn titlebar-nav-btn ${location.pathname === "/chat" ? "active" : ""
+                  }`}
                 onClick={() => navigate("/chat")}
               >
                 chat
@@ -72,7 +78,7 @@ export default function PawseWindow({
               title="Home"
               onClick={handleHome}
             >
-            <img src="/icons/home.png" alt="Home" className="pawse-titlebar-control-img" />
+              <img src="/icons/home.png" alt="Home" className="pawse-titlebar-control-img" />
             </button>
           )}
 
@@ -85,7 +91,7 @@ export default function PawseWindow({
               title="Sign out"
               onClick={handleSignOut}
             >
-            <img src="/icons/signout.png" alt="Sign out" className="pawse-titlebar-control-img" />
+              <img src="/icons/signout.png" alt="Sign out" className="pawse-titlebar-control-img" />
             </button>
           )}
 
@@ -100,12 +106,6 @@ export default function PawseWindow({
           </button>
         </div>
       </div>
-
-      {onBack && (
-        <button type="button" className="pawse-back-btn" onClick={onBack} aria-label="Go back">
-          &larr;
-        </button>
-      )}
 
       <div className="pawse-content">{children}</div>
       {footer && <div className="pawse-footer">{footer}</div>}

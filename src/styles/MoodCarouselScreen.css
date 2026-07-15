@@ -1,0 +1,579 @@
+.carousel-question {
+  text-align: center;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 700;
+  font-size: 20px;
+  color: #33241C;
+  margin: 0;
+  flex-shrink: 0;
+  margin-bottom: -7px;
+}
+
+.carousel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  gap: 4px;
+}
+
+.carousel-arrow {
+  background: none;
+  border: none;
+  font-size: 40px;
+  line-height: 1;
+  color: #33241C;
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+  transition: filter 0.15s ease;
+  user-select: none;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+}
+
+.carousel-arrow:hover {
+  filter: brightness(0);
+  transform: scale(1.1);
+}
+
+.carousel-arrow:active {
+  transform: scale(0.95);
+}
+
+.carousel-pet-container {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-pet-image {
+  width: 90%;
+  height: 90%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  animation: kitty-float 2.8s ease-in-out infinite;
+}
+
+@keyframes kitty-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.carousel-select-btn {
+  background: #634636;
+  color: #F0DECA;
+  border: 2px solid #33241C;
+  border-radius: 7px;
+  padding: 8px 28px;
+  font-family: "Pixelify Sans", monospace;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+
+.carousel-select-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.carousel-select-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.carousel-select-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.carousel-mood-description-box {
+  background: #634636;
+  border: 2px solid #33241C;
+  border-radius: 8px;
+  padding: 12px 14px;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 90px;
+  max-height: 160px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.carousel-mood-description-text {
+  margin: 0;
+  color: #F0DECA;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.carousel-error {
+  text-align: center;
+  font-size: 12px;
+  color: #F0DECA;
+  margin: 0;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── Carousel Search UI ────────────────────────────────────── */
+.carousel-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin: 10px auto 9px auto;
+}
+
+.carousel-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.carousel-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 32px 8px 10px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  border: 2px solid #A9836C;
+  border-radius: 7px;
+  background: #FFFBF7;
+  color: #33241C;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.carousel-search-input::placeholder {
+  color: #A9836C;
+  opacity: 0.8;
+}
+
+.carousel-search-input:focus {
+  border-color: #634636;
+}
+
+.carousel-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: #A9836C;
+  line-height: 1;
+  padding: 2px 4px;
+  transition: color 0.15s ease;
+}
+
+.carousel-search-clear:hover {
+  color: #634636;
+}
+
+.carousel-search-results {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 16px auto;
+}
+
+.carousel-search-badge {
+  background: #F0DECA;
+  border: 2px solid #33241C;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #33241C;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.carousel-search-badge:hover {
+  background: #E4C6AC;
+  transform: scale(1.02);
+}
+
+.carousel-search-badge.active {
+  background: #33241C;
+  color: #FFFBF7;
+  border-color: #33241C;
+}
+
+.carousel-empty-search {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  color: #8C6A53;
+  text-align: center;
+  padding: 24px 0;
+}
+
+/* ── Create-your-own-mood trigger button ─────────────────────── */
+.carousel-create-mood-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  background: #634636;
+  border: 2px solid #33241C;
+  color: #F0DECA;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.carousel-create-mood-btn:hover {
+  filter: brightness(1.1);
+}
+
+.carousel-create-mood-btn:active {
+  transform: translateY(1px);
+}
+
+.carousel-create-mood-plus {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.carousel-create-mood-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: #33241C;
+  color: #F0DECA;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 5px 9px;
+  border-radius: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.carousel-create-mood-btn:hover .carousel-create-mood-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* ── Create-your-own-mood popup (matches the "view mood" popup's look) ── */
+.create-mood-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(51, 36, 28, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: inherit;
+  animation: popup-overlay-fade 0.15s ease;
+}
+
+@keyframes popup-overlay-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.create-mood-popup {
+  background: #FDF3E7;
+  border: 3px solid #33241C;
+  border-radius: 16px;
+  padding: 28px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  width: min(90%, 300px);
+  box-sizing: border-box;
+  box-shadow: 0 8px 28px rgba(51, 36, 28, 0.32);
+  animation: popup-scale-in 0.15s ease;
+}
+
+@keyframes popup-scale-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.create-mood-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A9836C;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px;
+}
+
+.create-mood-close-btn:hover {
+  color: #33241C;
+}
+
+.create-mood-close-btn:active {
+  transform: scale(0.92);
+}
+
+.create-mood-heading {
+  margin: 0;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #33241C;
+  text-transform: lowercase;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.create-mood-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.create-mood-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.create-mood-label {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #33241C;
+  text-transform: lowercase;
+}
+
+.create-mood-input,
+.create-mood-textarea {
+  background: #F0DECA;
+  border: 2px solid #A9836C;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 13px;
+  color: #33241C;
+  resize: none;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.create-mood-input:focus,
+.create-mood-textarea:focus {
+  border-color: #634636;
+}
+
+.create-mood-counter {
+  align-self: flex-end;
+  font-size: 10px;
+  color: #A9836C;
+}
+
+.create-mood-image-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.create-mood-image-preview {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border: 2px solid #A9836C;
+  border-radius: 8px;
+  background: #F0DECA;
+  flex-shrink: 0;
+}
+
+.create-mood-file-input {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 11px;
+  color: #33241C;
+  flex: 1;
+  min-width: 0;
+}
+
+.create-mood-warning {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  color: #8b3a2a;
+  text-align: center;
+  margin: 0;
+}
+
+.create-mood-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.create-mood-cancel-btn,
+.create-mood-save-btn {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 8px 18px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.create-mood-save-btn {
+  background: #634636;
+  color: #F0DECA;
+  border: none;
+}
+
+.create-mood-save-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.create-mood-cancel-btn {
+  background: transparent;
+  color: #634636;
+  border: 2px solid #634636;
+}
+
+.create-mood-cancel-btn:hover:not(:disabled) {
+  background: #634636;
+  color: #F0DECA;
+}
+
+.create-mood-save-btn:disabled,
+.create-mood-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Custom mood Edit / Delete overlay in description box ── */
+.carousel-custom-actions-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+}
+
+.carousel-custom-actions-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.carousel-custom-action-icon {
+  background: rgba(51, 36, 28, 0.15);
+  border: 1.5px solid #33241C;
+  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.1s ease;
+  padding: 0;
+  user-select: none;
+}
+
+.carousel-custom-action-icon:hover {
+  background: #E4C6AC;
+}
+
+.carousel-custom-action-icon:active {
+  transform: translateY(1px);
+}
+
+/* Inline delete confirmation box overlay */
+.carousel-delete-confirm-overlay {
+  display: flex;
+  gap: 3px;
+  background: #FDF3E7;
+  padding: 2px;
+  border-radius: 6px;
+  border: 2.5px solid #33241C;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(51, 36, 28, 0.2);
+  animation: popup-scale-in 0.12s ease;
+}
+
+.carousel-delete-confirm-btn {
+  font-family: "Pixelify Sans", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1.5px solid #33241C;
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: background 0.12s ease;
+}
+
+.carousel-delete-confirm-btn.yes {
+  background: #8b3a2a;
+  color: #F0DECA;
+}
+
+.carousel-delete-confirm-btn.yes:hover {
+  filter: brightness(1.1);
+}
+
+.carousel-delete-confirm-btn.cancel {
+  background: #E4C6AC;
+  color: #33241C;
+}
+
+.carousel-delete-confirm-btn.cancel:hover {
+  filter: brightness(0.92);
+}
