@@ -215,3 +215,56 @@ as $$
 $$;
 
 grant execute on function public.get_email_for_username(text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- private_messages: edit / soft-delete / reply support
+-- ---------------------------------------------------------------------------
+alter table public.private_messages
+  add column if not exists reply_to_id uuid references public.private_messages (id) on delete set null,
+  add column if not exists edited_at timestamptz,
+  add column if not exists deleted_at timestamptz;
+
+create policy "pm_update_own" on public.private_messages for update
+  using (auth.uid() = sender_id)
+  with check (auth.uid() = sender_id);
+
+-- ---------------------------------------------------------------------------
+-- message_reactions: one reaction per person per message
+-- ---------------------------------------------------------------------------
+drop table if exists public.message_reactions cascade;
+create table public.message_reactions (
+  id uuid primary key default gen_random_uuid(),
+  message_id uuid not null references public.private_messages (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  emoji text not null,
+  created_at timestamptz not null default now(),
+  unique (message_id, user_id)
+);
+
+alter table public.message_reactions enable row level security;
+
+create policy "reactions_select_participant" on public.message_reactions for select
+  using (
+    exists (
+      select 1 from public.private_messages pm
+      where pm.id = message_id
+        and (pm.sender_id = auth.uid() or pm.recipient_id = auth.uid())
+    )
+  );
+
+create policy "reactions_insert_own" on public.message_reactions for insert
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from public.private_messages pm
+      where pm.id = message_id
+        and (pm.sender_id = auth.uid() or pm.recipient_id = auth.uid())
+    )
+  );
+
+create policy "reactions_update_own" on public.message_reactions for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "reactions_delete_own" on public.message_reactions for delete
+  using (auth.uid() = user_id);

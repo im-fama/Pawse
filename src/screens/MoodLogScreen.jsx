@@ -423,9 +423,14 @@ export default function MoodLogScreen({ userId }) {
                     const cellKey = day.toISOString();
                     const isHovered = hoveredDay === cellKey;
 
-                    // Cells in grid rows 1 & 2 (indices 0–13) would clip above,
-                    // so flip the tooltip to open downward instead.
-                    const tooltipBelow = idx < 14;
+                        // Cells in grid rows 1 & 2 (indices 0–13) would clip above,
+                        // so flip the tooltip to open downward instead.
+                        const tooltipBelow = idx < 14;
+                        // Cells in the first/last column would clip sideways,
+                        // so anchor the tooltip to that edge instead of centering it.
+                        const col = idx % 7;
+                        const tooltipAlign =
+                          col === 0 ? "align-start" : col === 6 ? "align-end" : "";
 
                     return (
                       <div
@@ -444,8 +449,10 @@ export default function MoodLogScreen({ userId }) {
                           </div>
                         )}
 
-                        {mood && isHovered && (
-                          <div className={`cell-mood-tooltip ${tooltipBelow ? "tooltip-below" : ""}`}>
+                          {mood && isHovered && (
+                          <div
+                            className={`cell-mood-tooltip ${tooltipBelow ? "tooltip-below" : ""} ${tooltipAlign}`.trim()}
+                          >
                             <div className="cell-mood-tooltip-card">
                               <PetImage mood={mood} className="cell-mood-tooltip-icon" />
                             </div>

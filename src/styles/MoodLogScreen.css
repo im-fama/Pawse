@@ -336,30 +336,30 @@
 /* ── Hover tooltip ── */
 .cell-mood-tooltip {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   background: #E4C6AC;
   border: 2px solid #A9836C;
-  border-radius: 12px;
-  padding: 14px 18px 12px;
+  border-radius: 10px;
+  padding: 8px 10px 7px;
   white-space: nowrap;
   z-index: 20;
   pointer-events: none;
   box-shadow: 0 4px 14px rgba(51, 36, 28, 0.25);
   animation: cell-mood-tooltip-fade 0.12s ease;
-  min-width: 88px;
+  min-width: 60px;
 }
 
 .cell-mood-tooltip-card {
   background: #F0DECA;
   border: 2px solid #A9836C;
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -392,14 +392,14 @@
 }
 
 .cell-mood-tooltip-icon {
-  width: 64px;
-  height: 64px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
 }
 
 .cell-mood-tooltip-label {
   font-family: "Pixelify Sans", monospace;
-  font-size: 16px;
+  font-size: 11px;
   font-weight: 700;
   color: #33241C;
   text-transform: lowercase;
@@ -413,6 +413,50 @@
 @keyframes cell-mood-tooltip-fade-below {
   from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Edge columns (Sun/Sat): anchor to that side instead of centering,
+   so the tooltip doesn't overflow the scroll container and get clipped. */
+.cell-mood-tooltip.align-start {
+  left: 0;
+  transform: translateX(0);
+}
+
+.cell-mood-tooltip.align-start::after {
+  left: 16px;
+  transform: translateX(0);
+}
+
+.cell-mood-tooltip.align-end {
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+}
+
+.cell-mood-tooltip.align-end::after {
+  left: auto;
+  right: 16px;
+  transform: translateX(0);
+}
+
+@keyframes cell-mood-tooltip-fade-plain {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cell-mood-tooltip-fade-plain-below {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cell-mood-tooltip.align-start,
+.cell-mood-tooltip.align-end {
+  animation: cell-mood-tooltip-fade-plain 0.12s ease;
+}
+
+.cell-mood-tooltip.align-start.tooltip-below,
+.cell-mood-tooltip.align-end.tooltip-below {
+  animation: cell-mood-tooltip-fade-plain-below 0.12s ease;
 }
 
 /* ── Weekly row clickable state ── */

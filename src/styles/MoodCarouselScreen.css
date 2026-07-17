@@ -114,8 +114,10 @@
   max-height: 160px;
   overflow: hidden;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -311,8 +313,13 @@
 }
 
 @keyframes popup-overlay-fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .create-mood-popup {
@@ -332,8 +339,15 @@
 }
 
 @keyframes popup-scale-in {
-  from { opacity: 0; transform: scale(0.88); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .create-mood-close-btn {
@@ -499,11 +513,10 @@
 }
 
 /* ── Custom mood Edit / Delete overlay in description box ── */
-.carousel-custom-actions-overlay {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 5;
+.carousel-custom-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .carousel-custom-actions-buttons {

@@ -3,7 +3,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import PawseWindow from "../components/PawseWindow";
 import PetImage from "../components/PetImage";
 import { getMoodById } from "../data/moods";
-import { FALLBACK_SUPPORT_MESSAGE } from "../data/supportMessages";
+// Shown only when the AI-generated message (logic/groq.js → generateSupportMessage) fails.
+const FALLBACK_SUPPORT_MESSAGE = "Whatever you're feeling, I'm here. Always. 🤍";
 import { generateSupportMessage } from "../logic/groq";
 import { deleteMoodLogNote, fetchMoodLogById, updateMoodLogNote } from "../logic/moodLogs";
 import "../styles/MessageScreen.css";
