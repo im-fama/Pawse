@@ -1,0 +1,175 @@
+/* Browser / installed-PWA shell. Electron (html.is-electron) is untouched. */
+
+.web-backdrop {
+  display: none;
+}
+
+/* ---------- Phone & small screens: the app fills the screen ---------- */
+html.is-web,
+html.is-web body {
+  height: 100%;
+  background: #33241C;
+}
+
+html.is-web #root {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: #33241C;
+}
+
+/* Stop iOS from zooming into inputs (needs >= 16px font). */
+@media (max-width: 519px), (max-height: 589px) {
+  html.is-web input,
+  html.is-web textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* ---------- Laptop / desktop: Electron-sized window on a cozy backdrop ---------- */
+@media (min-width: 520px) and (min-height: 590px) {
+  html.is-web body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 45%, #4a3427 0%, #33241C 55%, #2a1d16 100%);
+  }
+
+  html.is-web #root {
+    width: 397px;
+    height: 550px;
+    flex: none;
+    padding: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 2px #A9836C,
+      0 0 0 6px #33241C,
+      0 24px 60px rgba(0, 0, 0, 0.55),
+      0 0 120px rgba(228, 198, 172, 0.12);
+    animation: web-window-in 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  html.is-web .web-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+    /* subtle pixel grid */
+    background-image:
+      radial-gradient(rgba(240, 222, 202, 0.06) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+}
+
+@keyframes web-window-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Slow drifting warm glows */
+.web-glow {
+  position: absolute;
+  width: 46vmax;
+  height: 46vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.35;
+  animation: web-glow-drift 22s ease-in-out infinite alternate;
+}
+
+.web-glow-a { background: #634636; top: -12vmax; left: -10vmax; }
+.web-glow-b { background: #A9836C; bottom: -18vmax; right: -12vmax; opacity: 0.22; animation-duration: 28s; animation-delay: -8s; }
+.web-glow-c { background: #E4C6AC; top: 40%; left: 55%; width: 26vmax; height: 26vmax; opacity: 0.08; animation-duration: 18s; animation-delay: -4s; }
+
+@keyframes web-glow-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(6vmax, 4vmax) scale(1.15); }
+}
+
+/* Paw prints floating up the page */
+.web-paw {
+  position: absolute;
+  left: var(--x);
+  bottom: -60px;
+  width: var(--size);
+  height: var(--size);
+  background: url("/icons/paw.png") center / contain no-repeat;
+  image-rendering: pixelated;
+  opacity: 0;
+  animation: web-paw-rise var(--dur) linear infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes web-paw-rise {
+  0%   { transform: translate(0, 0) rotate(var(--rot)); opacity: 0; }
+  10%  { opacity: 0.35; }
+  50%  { transform: translate(18px, -55vh) rotate(calc(var(--rot) * -1)); }
+  90%  { opacity: 0.25; }
+  100% { transform: translate(-10px, -115vh) rotate(var(--rot)); opacity: 0; }
+}
+
+/* Sleepy cats bobbing in the corners (line art tinted cream) */
+.web-cat {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 120px;
+  height: 90px;
+  background: var(--img) center / contain no-repeat;
+  image-rendering: pixelated;
+  filter: invert(0.9) sepia(0.5) saturate(1.4);
+  opacity: 0.16;
+  animation: web-cat-bob 6s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes web-cat-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-14px) rotate(3deg); }
+}
+
+/* Small label under the window */
+.web-caption {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 275px + 22px);
+  transform: translateX(-50%);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #A9836C;
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  opacity: 0;
+  animation: web-caption-in 0.8s ease 0.6s forwards;
+}
+
+.web-caption-paw {
+  width: 14px;
+  height: 14px;
+  background: url("/icons/paw.png") center / contain no-repeat;
+  image-rendering: pixelated;
+  animation: web-caption-wiggle 2.4s ease-in-out infinite;
+}
+
+@keyframes web-caption-in {
+  to { opacity: 0.8; }
+}
+
+@keyframes web-caption-wiggle {
+  0%, 100% { transform: rotate(-12deg); }
+  50%      { transform: rotate(12deg); }
+}
+
+/* Hide the caption when there isn't room below the window */
+@media (max-height: 680px) {
+  .web-caption { display: none; }
+}

@@ -1,7 +1,28 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { AuthContext } from "./AuthContextObject";
-import { rememberAccount } from "./savedAccounts";
+import {
+  clearSavedSession,
+  getSavedAccount,
+  rememberAccount,
+  updateSavedSession,
+} from "./savedAccounts";
+
+// Clears this device's Supabase session WITHOUT revoking it on the server,
+// so a remembered account's token keeps working for one-tap sign-in.
+function clearLocalSession() {
+  supabase.auth.stopAutoRefresh();
+  const storageKey = supabase.auth.storageKey;
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (storageKey ? key.startsWith(storageKey) : /^sb-.*-auth-token/.test(key)) {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -39,6 +60,8 @@ export function AuthProvider({ children }) {
 
     // Listen for auth state changes (sign in, sign out, token refresh, etc.)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Supabase rotates refresh tokens; keep the remembered copy current.
+      updateSavedSession(session);
       if (mounted) {
         setSession(session);
         setLoading(false);
@@ -79,6 +102,7 @@ export function AuthProvider({ children }) {
                 id: session.user.id,
                 email: session.user.email,
                 username: data.username,
+                refreshToken: session.refresh_token,
               });
             }
           }
@@ -154,7 +178,37 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  // One-tap sign-in for a remembered account. Returns false when the stored
+  // token no longer works, so the caller can ask for the password instead.
+  async function signInWithSavedAccount(email) {
+    const account = getSavedAccount(email);
+    if (!account?.refreshToken) return false;
+
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: account.refreshToken,
+    });
+    if (error || !data?.session) {
+      clearSavedSession(email);
+      return false;
+    }
+    return true;
+  }
+
   async function signOut() {
+    const {
+      data: { session: current },
+    } = await supabase.auth.getSession();
+    const email = current?.user?.email;
+
+    // Remembered account: keep its session alive for one-tap sign-in and just
+    // clear it from this device. Reload so the Supabase client starts clean.
+    if (email && current.refresh_token && getSavedAccount(email)) {
+      updateSavedSession(current);
+      clearLocalSession();
+      window.location.reload();
+      return;
+    }
+
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }
@@ -168,6 +222,7 @@ export function AuthProvider({ children }) {
     hasProfile: Boolean(profile),
     signIn,
     signInWithUsername,
+    signInWithSavedAccount,
     signUp,
     signOut,
   };

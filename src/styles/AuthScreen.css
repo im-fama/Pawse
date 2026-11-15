@@ -459,3 +459,118 @@
 .saved-account-switch-btn:hover {
   color: #634636;
 }
+/* ── saved-account picker ("who's pawsing?") ─────────────────── */
+.saved-accounts-picker {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  gap: 8px;
+}
+
+.saved-account-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  animation: saved-account-in 0.35s ease both;
+}
+
+.saved-account-item:nth-child(2) { animation-delay: 0.05s; }
+.saved-account-item:nth-child(3) { animation-delay: 0.1s; }
+.saved-account-item:nth-child(4) { animation-delay: 0.15s; }
+
+@keyframes saved-account-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.saved-accounts-picker .saved-account-row {
+  padding: 10px 44px 10px 12px;
+  min-height: 56px;
+}
+
+.saved-accounts-picker .saved-account-row:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.saved-accounts-picker .saved-account-row:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.saved-accounts-picker .saved-account-avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 15px;
+}
+
+.saved-account-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.saved-account-hint {
+  font-size: 11px;
+  color: #A9836C;
+  text-transform: lowercase;
+}
+
+.saved-account-go {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: brightness(0.45) sepia(1) saturate(2);
+  opacity: 0.55;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.saved-account-row:hover .saved-account-go {
+  opacity: 1;
+  transform: rotate(-12deg);
+}
+
+.saved-account-go.is-pending {
+  opacity: 1;
+  animation: saved-account-paw 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes saved-account-paw {
+  from { transform: rotate(-15deg) scale(0.9); }
+  to   { transform: rotate(15deg) scale(1.1); }
+}
+
+/* × sits on top of the row, outside its click area */
+.saved-accounts-picker .saved-account-remove-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 18px;
+  padding: 0;
+}
+
+.saved-accounts-picker .saved-account-remove-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.saved-accounts-picker .saved-account-row:has(+ .saved-account-remove-btn) .saved-account-go {
+  margin-right: 6px;
+}
+
+.auth-back-to-saved {
+  align-self: flex-start;
+  flex-shrink: 0;
+}

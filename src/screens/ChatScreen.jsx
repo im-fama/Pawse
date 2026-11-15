@@ -21,8 +21,6 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import "../styles/ChatScreen.css";
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
-
 // Quick-tap reactions shown in the message toolbar.
 const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🙏", "👍"];
 
@@ -369,7 +367,7 @@ export default function ChatScreen({ userId }) {
     e.preventDefault();
     const text = inputText.trim();
     const todayStr = getTodayDateString();
-    if (!text || isTyping || selectedDate !== todayStr || !GROQ_API_KEY) return;
+    if (!text || isTyping || selectedDate !== todayStr) return;
 
     setError("");
     const newMsg = { sender: "user", text };
@@ -386,8 +384,7 @@ export default function ChatScreen({ userId }) {
       const responseText = await sendChatMessage(
         messages,
         text,
-        todayMood ? todayMood.label.toLowerCase() : null,
-        GROQ_API_KEY
+        todayMood ? todayMood.label.toLowerCase() : null
       );
 
       if (responseText) {
@@ -529,7 +526,7 @@ export default function ChatScreen({ userId }) {
 
   const isToday = selectedDate === getTodayDateString();
   const activeMood = todayMood || { id: "calm", label: "Calm", image: "calm.png" };
-  const aiChatDisabled = !isToday || isTyping || !GROQ_API_KEY;
+  const aiChatDisabled = !isToday || isTyping;
 
   // Filter + sort: most recent conversation first, then alphabetical
   const filteredFriends = friends

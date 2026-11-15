@@ -1,7 +1,7 @@
 
 import { useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { onCloseMouseDown } from "../lib/windowControls";
+import { isElectron, onCloseMouseDown } from "../lib/windowControls";
 import { AuthContext } from "../lib/AuthContextObject";
 import "../styles/PawseWindow.css";
 
@@ -95,15 +95,17 @@ export default function PawseWindow({
             </button>
           )}
 
-          {/* Close — always visible */}
-          <button
-            type="button"
-            className="pawse-titlebar-control-btn close-btn"
-            aria-label="Close"
-            onMouseDown={onCloseMouseDown}
-          >
-            &times;
-          </button>
+          {/* Close — desktop app only; browsers and phones manage their own windows */}
+          {isElectron && (
+            <button
+              type="button"
+              className="pawse-titlebar-control-btn close-btn"
+              aria-label="Close"
+              onMouseDown={onCloseMouseDown}
+            >
+              &times;
+            </button>
+          )}
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PawseWindow from "../components/PawseWindow";
 import { useAuth } from "../lib/useAuth";
 import { setUsername as setUsernameOnAccount } from "../lib/profiles";
-import { getSavedAccounts, removeSavedAccount } from "../lib/savedAccounts";
+import { forgetAccount, getSavedAccounts } from "../lib/savedAccounts";
 import "../styles/AuthScreen.css";
 
 function suggestUsernameFromEmail(email) {
@@ -13,7 +13,15 @@ function suggestUsernameFromEmail(email) {
 
 export default function AuthScreen() {
   const navigate = useNavigate();
-  const { user, hasProfile, signIn, signInWithUsername, signUp, refreshProfile } = useAuth();
+  const {
+    user,
+    hasProfile,
+    signIn,
+    signInWithUsername,
+    signInWithSavedAccount,
+    signUp,
+    refreshProfile,
+  } = useAuth();
 
   const [mode, setMode] = useState("login"); // "login" | "signup"
   const [loginMethod, setLoginMethod] = useState("email"); // "email" | "username"
@@ -32,6 +40,9 @@ export default function AuthScreen() {
 
   const [savedAccounts, setSavedAccounts] = useState(() => getSavedAccounts());
   const [selectedAccount, setSelectedAccount] = useState(null);
+  // Saved-account picker is the first thing returning users see.
+  const [showPicker, setShowPicker] = useState(() => getSavedAccounts().length > 0);
+  const [pendingEmail, setPendingEmail] = useState(null);
 
   function selectAccount(account) {
     setSelectedAccount(account);
@@ -43,16 +54,56 @@ export default function AuthScreen() {
 
   function useAnotherAccount() {
     setSelectedAccount(null);
+    setShowPicker(false);
     setError("");
+    setMessage("");
     setPassword("");
   }
 
-  function handleRemoveSavedAccount(event, email) {
-    event.stopPropagation();
-    removeSavedAccount(email);
-    setSavedAccounts(getSavedAccounts());
+  function backToPicker() {
+    setSelectedAccount(null);
+    setShowPicker(true);
+    setError("");
+    setMessage("");
+    setPassword("");
+  }
+
+  async function handleQuickLogin(account) {
+    if (pendingEmail) return;
+    setError("");
+    setMessage("");
+
+    if (!account.refreshToken) {
+      selectAccount(account);
+      return;
+    }
+
+    setPendingEmail(account.email);
+    try {
+      const ok = await signInWithSavedAccount(account.email);
+      if (ok) {
+        navigate("/home", { replace: true });
+        return;
+      }
+      setSavedAccounts(getSavedAccounts());
+      selectAccount(account);
+      setMessage("Enter your password once more and you'll be remembered again.");
+    } catch (err) {
+      setError(err.message || "Couldn't log in. Try again?");
+    } finally {
+      setPendingEmail(null);
+    }
+  }
+
+  async function handleRemoveSavedAccount(email) {
+    await forgetAccount(email);
+    const remaining = getSavedAccounts();
+    setSavedAccounts(remaining);
     if (selectedAccount?.email === email) {
       setSelectedAccount(null);
+    }
+    if (remaining.length === 0) {
+      setShowPicker(false);
     }
   }
 
@@ -241,9 +292,9 @@ export default function AuthScreen() {
                 <button
                   type="button"
                   className="saved-account-switch-btn"
-                  onClick={useAnotherAccount}
+                  onClick={savedAccounts.length > 0 ? backToPicker : useAnotherAccount}
                 >
-                  not you? use another account
+                  not you? pick another account
                 </button>
               </div>
             </div>
@@ -288,6 +339,12 @@ export default function AuthScreen() {
                   {error}
                 </div>
               )}
+              {message && (
+                <div className="auth-feedback auth-message">
+                  <span className="auth-feedback-icon">✓</span>
+                  {message}
+                </div>
+              )}
 
               <div className="auth-actions">
                 <button type="submit" className="auth-submit-btn" disabled={submitting}>
@@ -295,6 +352,93 @@ export default function AuthScreen() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </PawseWindow>
+    );
+  }
+
+  if (mode === "login" && showPicker && savedAccounts.length > 0) {
+    return (
+      <PawseWindow title="Pawse" icon="🐾">
+        <div className="auth-layout">
+          <p className="auth-greeting">welcome back!</p>
+
+          <div className="pawse-inner-card auth-card">
+            <h2 className="auth-mode-title">who's pawsing?</h2>
+
+            <ul className="saved-accounts-list saved-accounts-picker">
+              {savedAccounts.map((account) => {
+                const name = account.username || account.email;
+                const isPending = pendingEmail === account.email;
+                return (
+                  <li key={account.email} className="saved-account-item">
+                    <button
+                      type="button"
+                      className="saved-account-row"
+                      onClick={() => handleQuickLogin(account)}
+                      disabled={Boolean(pendingEmail)}
+                      aria-label={`Log in as ${name}`}
+                    >
+                      <span className="saved-account-avatar">
+                        {account.username?.[0]?.toUpperCase() || "?"}
+                      </span>
+                      <span className="saved-account-text">
+                        <span className="saved-account-name">{name}</span>
+                        <span className="saved-account-hint">
+                          {isPending
+                            ? "logging in..."
+                            : account.refreshToken
+                            ? "tap to log in"
+                            : "needs password"}
+                        </span>
+                      </span>
+                      <img
+                        src="/icons/paw.png"
+                        alt=""
+                        className={`saved-account-go ${isPending ? "is-pending" : ""}`}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className="saved-account-remove-btn"
+                      aria-label={`Remove ${name} from this device`}
+                      title="Remove from this device"
+                      onClick={() => handleRemoveSavedAccount(account.email)}
+                      disabled={Boolean(pendingEmail)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {error && (
+              <div className="auth-feedback auth-error">
+                <span className="auth-feedback-icon">!</span>
+                {error}
+              </div>
+            )}
+
+            <div className="auth-actions">
+              <button
+                type="button"
+                className="auth-submit-btn"
+                onClick={useAnotherAccount}
+                disabled={Boolean(pendingEmail)}
+              >
+                use another account
+              </button>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() => switchMode("signup")}
+                disabled={Boolean(pendingEmail)}
+              >
+                sign up
+              </button>
+            </div>
           </div>
         </div>
       </PawseWindow>
@@ -311,39 +455,14 @@ export default function AuthScreen() {
             {mode === "login" ? "log in" : "sign up"}
           </h2>
 
-          {/* Saved accounts — pick one to skip straight to the password field */}
           {mode === "login" && savedAccounts.length > 0 && (
-            <div className="saved-accounts-list">
-              {savedAccounts.map((account) => (
-                <button
-                  type="button"
-                  key={account.email}
-                  className="saved-account-row"
-                  onClick={() => selectAccount(account)}
-                >
-                  <span className="saved-account-avatar">
-                    {account.username?.[0]?.toUpperCase() || "?"}
-                  </span>
-                  <span className="saved-account-name">
-                    {account.username || account.email}
-                  </span>
-                  <span
-                    className="saved-account-remove-btn"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Remove ${account.username || account.email}`}
-                    onClick={(e) => handleRemoveSavedAccount(e, account.email)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        handleRemoveSavedAccount(e, account.email);
-                      }
-                    }}
-                  >
-                    ×
-                  </span>
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              className="saved-account-switch-btn auth-back-to-saved"
+              onClick={backToPicker}
+            >
+              ← saved accounts
+            </button>
           )}
 
           {/* Login method toggle — only shown on login screen */}

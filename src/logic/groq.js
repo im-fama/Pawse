@@ -1,11 +1,39 @@
-const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
+import { supabase } from "../lib/supabaseClient";
 
-export async function sendChatMessage(history, message, todayMood, apiKey) {
-  const keyToUse = apiKey || import.meta.env.VITE_GROQ_API_KEY;
-  if (!keyToUse) {
-    throw new Error("Missing Groq API key. Please add it in settings or the .env file.");
+// All Groq calls go through our own /api/groq endpoint (Vercel function in
+// production, Vite middleware in dev) so the Groq key never reaches the browser.
+// The packaged Electron app loads from file://, so it needs VITE_API_BASE_URL
+// pointing at the deployed site (e.g. https://pawse.vercel.app).
+function getApiBase() {
+  const configured = import.meta.env.VITE_API_BASE_URL;
+  if (configured) return configured.replace(/\/$/, "");
+  if (window.location.protocol.startsWith("http")) return "";
+  return null;
+}
+
+async function callGroq(payload) {
+  const apiBase = getApiBase();
+  if (apiBase === null) {
+    throw new Error("Kitty isn't connected yet. Set VITE_API_BASE_URL to your deployed site.");
   }
+
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) {
+    throw new Error("Please log in again to talk to Kitty.");
+  }
+
+  return fetch(`${apiBase}/api/groq`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function sendChatMessage(history, message, todayMood) {
 
   let systemPrompt =
     "You are Kitty, a calm and empathetic companion inside a mood-tracking app called Pawse. Your role is similar to a supportive therapist or counsellor: you listen without judgment, ask thoughtful follow-up questions, and help the user reflect on their feelings. Speak in a warm, grounded, conversational tone. Keep responses concise, usually 2 to 4 sentences. You are caring but composed. have fun talking to the user and be funny";
@@ -20,22 +48,14 @@ export async function sendChatMessage(history, message, todayMood, apiKey) {
       content: msg.text,
     }));
 
-  const response = await fetch(GROQ_CHAT_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${keyToUse}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: import.meta.env.VITE_GROQ_MODEL || DEFAULT_GROQ_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...previousMessages,
-        { role: "user", content: message },
-      ],
-      max_completion_tokens: 220,
-      temperature: 0.75,
-    }),
+  const response = await callGroq({
+    messages: [
+      { role: "system", content: systemPrompt },
+      ...previousMessages,
+      { role: "user", content: message },
+    ],
+    max_completion_tokens: 220,
+    temperature: 0.75,
   });
 
   if (!response.ok) {
@@ -48,7 +68,7 @@ export async function sendChatMessage(history, message, todayMood, apiKey) {
       lowerMessage.includes("invalid api key") ||
       lowerMessage.includes("unauthorized")
     ) {
-      throw new Error("Groq rejected this API key. Please check it or add a new key.");
+      throw new Error(rawMessage || "Kitty couldn't connect. Check GROQ_API_KEY on the server.");
     }
 
     if (
@@ -71,11 +91,7 @@ export async function sendChatMessage(history, message, todayMood, apiKey) {
   return replyText.trim();
 }
 
-export async function generateSupportMessage(moodLabel, apiKey) {
-  const keyToUse = apiKey || import.meta.env.VITE_GROQ_API_KEY;
-  if (!keyToUse) {
-    throw new Error("Missing Groq API key.");
-  }
+export async function generateSupportMessage(moodLabel) {
 
   const prompt = `You are a compassionate and supportive assistant.
 
@@ -95,18 +111,10 @@ Mood: ${moodLabel}
 
 Support Message:`;
 
-  const response = await fetch(GROQ_CHAT_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${keyToUse}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: import.meta.env.VITE_GROQ_MODEL || DEFAULT_GROQ_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      max_completion_tokens: 65,
-      temperature: 0.75,
-    }),
+  const response = await callGroq({
+    messages: [{ role: "user", content: prompt }],
+    max_completion_tokens: 65,
+    temperature: 0.75,
   });
 
   if (!response.ok) {
