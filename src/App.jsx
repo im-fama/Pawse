@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import AuthScreen from "./screens/AuthScreen";
 import HomeScreen from "./screens/HomeScreen";
 import MoodCarouselScreen from "./screens/MoodCarouselScreen";
 import MessageScreen from "./screens/MessageScreen";
 import MoodLogScreen from "./screens/MoodLogScreen";
 import ChatScreen from "./screens/ChatScreen";
+import BirthdayScreen from "./screens/BirthdayScreen";
+import { shouldShowBirthday } from "./lib/birthday";
 import { fetchLatestMoodLog, daysSince } from "./logic/moodLogs";
 import { checkAndSendReminder } from "./logic/reminders";
 import { useAuth } from "./lib/useAuth";
@@ -22,6 +24,9 @@ export default function App() {
 
 function PawseRouter() {
   const location = useLocation();
+  const navigate = useNavigate();
+  // One-time birthday surprise, shown before anything else on a new device.
+  const [birthdayOpen, setBirthdayOpen] = useState(() => shouldShowBirthday());
   const { user, loading: authLoading, hasProfile } = useAuth();
   const userId = user?.id ?? null;
   const [latestMoodLog, setLatestMoodLog] = useState(null);
@@ -84,6 +89,17 @@ function PawseRouter() {
       cancelled = true;
     };
   }, [authLoading, latestMoodLog?.created_at, stateLoading, user?.email, userId]);
+
+  if (birthdayOpen || location.pathname === "/birthday") {
+    return (
+      <BirthdayScreen
+        onDone={() => {
+          setBirthdayOpen(false);
+          navigate("/", { replace: true });
+        }}
+      />
+    );
+  }
 
   // Waiting for Supabase session to initialise
   if (authLoading) {
