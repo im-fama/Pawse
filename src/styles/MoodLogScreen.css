@@ -298,7 +298,8 @@
 }
 
 .calendar-cell.today {
-  outline: 2px solid #A9836C;
+  /* Drawn inside the cell so the scroll container can't clip it. */
+  box-shadow: inset 0 0 0 2px #A9836C;
 }
 
 .calendar-cell.logged {
