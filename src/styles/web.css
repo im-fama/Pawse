@@ -22,15 +22,17 @@ html.is-web #root {
 }
 
 /* Stop iOS from zooming into inputs (needs >= 16px font). */
-@media (max-width: 519px), (max-height: 589px) {
+@media (max-width: 519px) {
   html.is-web input,
   html.is-web textarea {
     font-size: max(16px, 1em);
   }
 }
 
-/* ---------- Laptop / desktop: Electron-sized window on a cozy backdrop ---------- */
-@media (min-width: 520px) and (min-height: 590px) {
+/* ---------- Laptop / desktop: the exact Electron window, centred ----------
+   Always 397x550 like the desktop app; on short browser windows it's scaled
+   down as a whole (--pawse-scale is set in index.html) instead of stretching. */
+@media (min-width: 520px) {
   html.is-web body {
     display: flex;
     align-items: center;
@@ -44,11 +46,9 @@ html.is-web #root {
     height: 550px;
     flex: none;
     padding: 0;
-    border-radius: 6px;
     overflow: hidden;
+    scale: var(--pawse-scale, 1);
     box-shadow:
-      0 0 0 2px #A9836C,
-      0 0 0 6px #33241C,
       0 24px 60px rgba(0, 0, 0, 0.55),
       0 0 120px rgba(228, 198, 172, 0.12);
     animation: web-window-in 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
@@ -139,7 +139,7 @@ html.is-web #root {
 .web-caption {
   position: absolute;
   left: 50%;
-  top: calc(50% + 275px + 22px);
+  top: calc(50% + 275px * var(--pawse-scale, 1) + 18px);
   transform: translateX(-50%);
   margin: 0;
   display: flex;
@@ -170,6 +170,6 @@ html.is-web #root {
 }
 
 /* Hide the caption when there isn't room below the window */
-@media (max-height: 680px) {
+@media (max-height: 620px) {
   .web-caption { display: none; }
 }

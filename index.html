@@ -16,6 +16,15 @@
     <script>
       // Electron's preload runs first, so this tells desktop and web apart before paint.
       document.documentElement.classList.add(window.electronAPI ? "is-electron" : "is-web");
+      // Shrink the 397x550 window to fit short browser windows (never enlarge).
+      (function () {
+        function fit() {
+          var scale = Math.min(1, (window.innerHeight - 32) / 550, (window.innerWidth - 32) / 397);
+          document.documentElement.style.setProperty("--pawse-scale", Math.max(scale, 0.5));
+        }
+        fit();
+        window.addEventListener("resize", fit);
+      })();
     </script>
   </head>
   <body>
