@@ -1,5 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap");
 
+/* Pawse always uses its own palette. "only light" stops Chrome's forced dark
+   mode; the dark-scheme block below tells Samsung Internet the site already
+   handles dark mode, so it doesn't recolour it either. */
+:root {
+  color-scheme: only light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: only light;
+  }
+
+  html,
+  body {
+    background: #33241C;
+    color: #F0DECA;
+  }
+}
+
 * {
   box-sizing: border-box;
   font-family: "Pixelify Sans", monospace;
