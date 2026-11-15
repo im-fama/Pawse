@@ -4,7 +4,28 @@ import process from "node:process";
 // Used by the Vercel function (api/groq.js) and the Vite dev middleware.
 
 const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
+// Tried in order; if Groq retires one (404 / model_not_found) the next is used.
+// GROQ_MODEL in the environment, if set, is tried first.
+const FALLBACK_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b"];
+
+// Reasoning models would otherwise spend the short token budget "thinking".
+function modelOptions(model) {
+  if (model.startsWith("qwen/")) return { reasoning_effort: "none" };
+  if (model.startsWith("openai/gpt-oss")) return { reasoning_effort: "low", include_reasoning: false };
+  return {};
+}
+
+function isModelUnavailable(status, data) {
+  const code = data?.error?.code || "";
+  const message = (data?.error?.message || "").toLowerCase();
+  return (
+    status === 404 ||
+    code === "model_not_found" ||
+    code === "model_decommissioned" ||
+    message.includes("does not exist") ||
+    message.includes("decommissioned")
+  );
+}
 const MAX_MESSAGES = 40;
 const MAX_CONTENT_LENGTH = 4000;
 const MAX_COMPLETION_TOKENS = 300;
@@ -68,23 +89,32 @@ export async function handleGroqRequest({ authHeader, body, env = process.env })
   );
   const temperature = Math.min(Math.max(Number(body?.temperature) || 0.75, 0), 1.5);
 
-  try {
-    const response = await fetch(GROQ_CHAT_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: env.GROQ_MODEL || DEFAULT_GROQ_MODEL,
-        messages,
-        max_completion_tokens: maxTokens,
-        temperature,
-      }),
-    });
+  const models = [...new Set([env.GROQ_MODEL, ...FALLBACK_MODELS].filter(Boolean))];
 
-    const data = await response.json().catch(() => ({}));
-    return { status: response.status, data };
+  try {
+    let last = null;
+    for (const model of models) {
+      const response = await fetch(GROQ_CHAT_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_completion_tokens: maxTokens,
+          temperature,
+          ...modelOptions(model),
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      last = { status: response.status, data };
+      if (!isModelUnavailable(response.status, data)) return last;
+      console.warn(`Groq model ${model} unavailable, trying next.`);
+    }
+    return last;
   } catch {
     return fail(502, "Could not reach Groq.");
   }
